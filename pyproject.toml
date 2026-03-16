@@ -1,0 +1,33 @@
+[project]
+name = "lakehouse"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Romilson Luis",email = "romilsonlonan@gmail.com"}
+]
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "fastapi",
+    "update (>=0.0.1,<0.0.2)",
+    "uvicorn[standard] (>=0.41.0,<0.42.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "pendulum (>=3.2.0,<4.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.15.6,<0.16.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
+    "taskipy (>=1.14.1,<2.0.0)"
+]
+docs = [
+    "mkdocs (>=1.6.1,<2.0.0)"
+]
