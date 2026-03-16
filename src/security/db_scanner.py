@@ -23,6 +23,14 @@ from datetime import datetime
 
 from src.utils.logger import logger
 
+# Tentar importar piicatcher - pode não estar disponível
+try:
+    from piicatcher import scan_database
+    PIICATCHER_AVAILABLE = True
+except ImportError:
+    PIICATCHER_AVAILABLE = False
+    scan_database = None
+
 
 @dataclass
 class TableScanResult:
@@ -115,15 +123,22 @@ class DatabaseScanner:
             
         Returns:
             DatabaseScanResult com os resultados
+        
+        Raises:
+            ImportError: Se piicatcher não estiver instalado
         """
+        if not PIICATCHER_AVAILABLE:
+            raise ImportError(
+                "piicatcher não está instalado. "
+                "Execute: pip install piicatcher"
+            )
+        
         logger.info("=" * 60)
         logger.info(f"🔍 ESCANEANDO BANCO DE DADOS")
         logger.info(f"   Connection: {self._mask_connection(connection_string)}")
         logger.info("=" * 60)
         
         try:
-            from piicatcher import scan_database
-            
             # Extrair nome do banco
             db_name = self._extract_db_name(connection_string)
             
