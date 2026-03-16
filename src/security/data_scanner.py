@@ -25,10 +25,23 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 import pandas as pd
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer
-from presidio_analyzer.nlp_engine import NlpEngineProvider
 
 from src.utils.logger import logger
+
+# Tentar importar presidio_analyzer - pode não estar disponível em ambiente de desenvolvimento
+try:
+    from presidio_analyzer import AnalyzerEngine, PatternRecognizer
+    PRESIDIO_AVAILABLE = True
+except ImportError:
+    PRESIDIO_AVAILABLE = False
+    AnalyzerEngine = None
+    PatternRecognizer = None
+
+# Tentar importar presidio_anonymizer
+try:
+    from presidio_anonymizer import AnonymizerEngine
+except ImportError:
+    AnonymizerEngine = None
 
 
 @dataclass
@@ -131,7 +144,17 @@ class DataSecurityScanner:
         
         Args:
             language: Idioma para análise NLP (padrão: 'pt' para português)
+        
+        Raises:
+            ImportError: Se presidio-analyzer não estiver instalado
         """
+        if not PRESIDIO_AVAILABLE:
+            raise ImportError(
+                "presidio-analyzer não está instalado. "
+                "Execute: pip install presidio-analyzer presidio-anonymizer spacy "
+                "python -m spacy download pt_core_news_lg"
+            )
+        
         self.language = language
         self._setup_nlp_engine()
         self._setup_custom_recognizers()
@@ -141,6 +164,9 @@ class DataSecurityScanner:
     def _setup_nlp_engine(self):
         """Configura o motor NLP para português."""
         try:
+            # Usa NlpEngineProvider para configuração explícita do modelo spacy
+            from presidio_analyzer.nlp_engine import NlpEngineProvider
+            
             configuration = {
                 "nlp_engine_name": "spacy",
                 "models": [{"lang_code": "pt", "model_name": "pt_core_news_lg"}]
@@ -156,8 +182,6 @@ class DataSecurityScanner:
     def _setup_custom_recognizers(self):
         """Adiciona reconhecedores customizados para dados brasileiros."""
         try:
-            from presidio_analyzer import PatternRecognizer
-            
             # CPF brasileiro
             cpf_recognizer = PatternRecognizer(
                 supported_entity="BR_CPF",
@@ -379,7 +403,9 @@ class DataSecurityScanner:
         Returns:
             Texto com dados sensíveis substituídos
         """
-        from presidio_anonymizer import AnonymizerEngine
+        if AnonymizerEngine is None:
+            logger.error("presidio-anonymizer não está instalado")
+            return text
         
         entities = entities or self.DEFAULT_ENTITIES
         

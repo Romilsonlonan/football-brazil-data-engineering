@@ -13,6 +13,8 @@ from airflow.decorators import dag, task, task_group
 from datetime import datetime, timedelta
 from airflow.utils.task_group import TaskGroup
 
+from src.utils.logger import logger
+
 
 # Configuração padrão da DAG
 default_args = {

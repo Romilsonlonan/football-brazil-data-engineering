@@ -31,6 +31,9 @@ RUN pip install --no-cache-dir --break-system-packages poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi --only main
 
+# Download modelo spacy para português brasileiro (ignora erros se offline)
+RUN python -m spacy download pt_core_news_lg || echo "Aviso: Falha ao baixar modelo spacy - pode causar erros em scanners de segurança"
+
 # Copia código fonte
 COPY --chown=appuser:appgroup src/ ./src/
 COPY --chown=appuser:appgroup data/ ./data/

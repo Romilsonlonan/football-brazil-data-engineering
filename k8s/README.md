@@ -26,22 +26,26 @@ kubectl create namespace lakehouse
 ```
 
 ### 2. Aplicar Secrets e ConfigMaps
+
 ```bash
 kubectl apply -f k8s/secret-fernet-key.yaml
 kubectl apply -f k8s/configmap-airflow.yaml
 ```
 
 ### 3. Aplicar RBAC
+
 ```bash
 kubectl apply -f k8s/rbac.yaml
 ```
 
 ### 4. Aplicar Services e PVCs
+
 ```bash
 kubectl apply -f k8s/services.yaml
 ```
 
 ### 5. Aplicar Deployments
+
 ```bash
 kubectl apply -f k8s/airflow-deployment.yaml
 ```
@@ -73,6 +77,7 @@ kubectl get svc -n lakehouse airflow-webserver
 ```
 
 Acesse: http://localhost:8080 (ou IP externo)
+
 - Usuário: admin
 - Senha: admin
 
@@ -88,19 +93,24 @@ kubectl delete namespace lakehouse
 ### Fernet Key
 
 A chave Fernet é usada para criptografar:
+
 - Conexões de banco de dados
 - Variáveis sensíveis
 - Configurações de API
 
 **IMPORTANTE:**
-1. **NUNCA versione a chave em repositórios Git**
-2. Gere sua própria chave: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
-3. Armazene a chave em local seguro (password manager, HashiCorp Vault, AWS Secrets Manager, etc.)
-4. Em produção, use um secret manager externo
+1.**NUNCA versione a chave em repositórios Git**
+
+2.Gere sua própria chave: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+
+3.Armazene a chave em local seguro (password manager, HashiCorp Vault, AWS Secrets Manager, etc.)
+
+4.Em produção, use um secret manager externo
 
 ### Credenciais
 
 As credenciais neste exemplo são para **desenvolvimento apenas**:
+
 - Altere senhas em produção
 - Use secrets externos
 - Implemente rotação de senhas
@@ -108,12 +118,14 @@ As credenciais neste exemplo são para **desenvolvimento apenas**:
 ## Troubleshooting
 
 ### Pod não inicia
+
 ```bash
 kubectl describe pod <pod-name> -n lakehouse
 kubectl logs <pod-name> -n lakehouse
 ```
 
 ### Problemas de permissão
+
 ```bash
 # Verificar service account
 kubectl get sa airflow -n lakehouse
@@ -123,6 +135,7 @@ kubectl get rolebindings -n lakehouse
 ```
 
 ### Problemas de storage
+
 ```bash
 # Ver eventos de PVC
 kubectl describe pvc <pvc-name> -n lakehouse
