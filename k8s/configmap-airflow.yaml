@@ -1,0 +1,104 @@
+# ============================================
+# Kubernetes ConfigMap - Airflow
+# ============================================
+# Este arquivo cria um ConfigMap para armazenar as variáveis de configuração
+# do Airflow.
+#
+# Uso: kubectl apply -f k8s/configmap-airflow.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-config
+  namespace: lakehouse
+  labels:
+    app: airflow
+    component: config
+data:
+  # Executor Configuration
+  AIRFLOW__CORE__EXECUTOR: "KubernetesExecutor"
+  
+  # Loading Examples (disable for production)
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  
+  # DAGS Configuration
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  AIRFLOW__CORE__LAZY_LOAD_PLUGINS: "false"
+  AIRFLOW__CORE__LAZY_LOAD_VARIABLES: "false"
+  
+  # API Configuration
+  AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+  
+  # Database Configuration
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://lakehouse:lakehouse123@lakehouse-postgres:5432/lakehouse"
+  
+  # Webserver Configuration
+  AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
+  AIRFLOW__WEBSERVER__WEB_SERVER_HOST: "0.0.0.0"
+  AIRFLOW__WEBSERVER__WEB_SERVER_PORT: "8080"
+  
+  # Logging
+  AIRFLOW__LOGGING__REMOTE_LOGGING: "false"
+  AIRFLOW__LOGGING__DAG_PROCESSOR_LOG_ROOT: "/opt/airflow/logs"
+  
+  # Kubernetes Configuration
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: "lakehouse-airflow"
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: "latest"
+  AIRFLOW__KUBERNETES__DAGS_VOLUME_SUBPATH: "dags"
+  AIRFLOW__KUBERNETES__LOGS_VOLUME_SUBPATH: "logs"
+  
+  # Python
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+---
+# ============================================
+# Kubernetes ConfigMap - MinIO
+# ============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-config
+  namespace: lakehouse
+  labels:
+    app: minio
+    component: config
+data:
+  # MinIO Configuration
+  MINIO_API_VERSION: "v1"
+  MINIO_BROWSER_REDIRECT_URL: ""
+  MINIO_CACHE_DRIVES: ""
+  MINIO_CACHE_EXCLUDE: ""
+  MINIO_CACHE_QUORUM: ""
+  MINIO_CACHE_WATERMARK_LOW: ""
+  MINIO_CACHE_WATERMARK_HIGH: ""
+  MINIO_DOMAIN: ""
+  MINIO_EVENTS_NOTIFICATION_SYSTEM: ""
+  MINIO_EVENTS_WEBHOOK_ENABLE: ""
+  MINIO_EVENTS_WEBHOOK_ENDPOINT: ""
+  MINIO_EVENTS_WEBHOOK_AUTH_TOKEN: ""
+  MINIO_IDENTITY_OPENID: ""
+  MINIO_IDENTITY_OPENID_CLIENT_ID: ""
+  MINIO_IDENTITY_OPENID_CLIENT_SECRET: ""
+  MINIO_IDENTITY_OPENID_CLAIM_NAME: ""
+  MINIO_IDENTITY_OPENID_JWKS_URL: ""
+  MINIO_IDENTITY_OPENID_REDIRECT_URI: ""
+  MINIO_IDENTITY_OPENID_SCOPES: ""
+  MINIO_IDENTITY_OPENID_USERNAME_CLAIM: ""
+  MINIO_KMS_KES_CERT_FILE: ""
+  MINIO_KMS_KES_ENDPOINT: ""
+  MINIO_KMS_KES_KEY_NAME: ""
+  MINIO_KMS_KES_KEY_FILE: ""
+  MINIO_KMS_KES_ROOT_KEY: ""
+  MINIO_LOGGER_COMET_LEVEL: ""
+  MINIO_LOGGER_LEVEL: ""
+  MINIO_NOTIFY_WEBHOOK_ENABLE: ""
+  MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN: ""
+  MINIO_NOTIFY_WEBHOOK_QUEUE_DIR: ""
+  MINIO_NOTIFY_WEBHOOK_QUEUE_LIMIT: ""
+  MINIO_NOTIFY_WEBHOOK_ENDPOINT: ""
+  MINIO_ROOT_USER: "minioadmin"
+  MINIO_ROOT_PASSWORD: "minioadmin123"
+  MINIO_SITE_NAME: "lakehouse"
+  MINIO_SITE_REGION: ""
+  MINIO_STORAGE_CLASS_STANDARD: ""
+  MINIO_UPDATE: "off"
