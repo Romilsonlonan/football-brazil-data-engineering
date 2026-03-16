@@ -1,0 +1,71 @@
+# ============================================
+# .dockerignore - Otimização de Build
+# ============================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentação
+*.md
+docs/
+
+# Ambiente
+.env
+.env.local
+
+# Dados (não copiar para imagem, usar volumes)
+data/
+# Mas permitir estrutura de diretórios vazios
+!data/bronze/.gitkeep
+!data/silver/.gitkeep
+!data/gold/.gitkeep
+
+# Docker
+Dockerfile
+docker-compose.yml
+.docker/
+
+# Kubernetes
+k8s/
+
+# Lock files (já copiado durante build)
+poetry.lock
+
+# Cache
+.cache/
+.ruff_cache/
+.mypy_cache/

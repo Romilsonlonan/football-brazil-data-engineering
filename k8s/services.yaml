@@ -1,0 +1,142 @@
+# ============================================
+# Kubernetes Services e Volumes
+# ============================================
+# Este arquivo define os Services e PersistentVolumeClaims
+# para o ambiente Kubernetes do Lakehouse.
+
+---
+# Airflow Webserver Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-webserver
+  namespace: lakehouse
+  labels:
+    app: airflow
+    component: webserver
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: airflow
+    component: webserver
+---
+# Airflow PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: lakehouse-postgres
+  namespace: lakehouse
+  labels:
+    app: lakehouse
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: lakehouse
+    component: postgres
+---
+# MinIO Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: lakehouse
+  labels:
+    app: minio
+    component: object-storage
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: s3
+    - port: 9001
+      targetPort: 9001
+      protocol: TCP
+      name: console
+  selector:
+    app: minio
+---
+# MinIO Console Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-console
+  namespace: lakehouse
+  labels:
+    app: minio
+    component: console
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9001
+      targetPort: 9001
+      protocol: TCP
+  selector:
+    app: minio
+---
+# PersistentVolumeClaim - Airflow DAGs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: airflow-dags-pvc
+  namespace: lakehouse
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+# PersistentVolumeClaim - Airflow Logs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: airflow-logs-pvc
+  namespace: lakehouse
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+---
+# PersistentVolumeClaim - Lakehouse Data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lakehouse-data-pvc
+  namespace: lakehouse
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+# PersistentVolumeClaim - PostgreSQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: lakehouse
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard

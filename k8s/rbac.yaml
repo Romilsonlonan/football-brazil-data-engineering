@@ -1,0 +1,124 @@
+# ============================================
+# Kubernetes RBAC - Airflow Service Account
+# ============================================
+# Este arquivo define as permissões RBAC para o Airflow
+# executar pods no Kubernetes.
+#
+# IMPORTANTE: O Airflow precisa de permissões para criar,
+# atualizar e deletar pods no namespace.
+
+---
+# ServiceAccount para Airflow
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: airflow
+  namespace: lakehouse
+  labels:
+    app: airflow
+---
+# Role para o Airflow no namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow
+  namespace: lakehouse
+  labels:
+    app: airflow
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - pods/exec
+      - configmaps
+      - secrets
+      - services
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - rolebindings
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+# RoleBinding para o Airflow
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow
+  namespace: lakehouse
+  labels:
+    app: airflow
+subjects:
+  - kind: ServiceAccount
+    name: airflow
+    namespace: lakehouse
+roleRef:
+  kind: Role
+  name: airflow
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole para recursos globais (se necessário)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: airflow-cluster
+  labels:
+    app: airflow
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - persistentvolumes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: airflow-cluster-binding
+  labels:
+    app: airflow
+subjects:
+  - kind: ServiceAccount
+    name: airflow
+    namespace: lakehouse
+roleRef:
+  kind: ClusterRole
+  name: airflow-cluster
+  apiGroup: rbac.authorization.k8s.io
