@@ -189,7 +189,6 @@ class DataSecurityScanner:
                     r"\d{3}\.?\d{3}\.?\d{3}-?\d{2}",
                     r"\d{11}"
                 ],
-                context_words=["cpf", "cadastro", "pessoa", "física", "cpf do", "número cpf"],
                 name="Brazilian CPF",
                 supported_language="pt"
             )
@@ -201,7 +200,6 @@ class DataSecurityScanner:
                     r"\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}",
                     r"\d{14}"
                 ],
-                context_words=["cnpj", "empresa", "jurídica", "cnpj da", "número cnpj"],
                 name="Brazilian CNPJ",
                 supported_language="pt"
             )
@@ -214,7 +212,6 @@ class DataSecurityScanner:
                     r"\d{10,11}",
                     r"\+55\s?\d{2}\s?\d{4,5}\s?\d{4}"
                 ],
-                context_words=["telefone", "celular", "whatsapp", "contato", "fone", "ligar para"],
                 name="Brazilian Phone",
                 supported_language="pt"
             )
@@ -225,7 +222,6 @@ class DataSecurityScanner:
                 patterns=[
                     r"\d{3}\.?\d{5}\.?\d{2}-?\d{1}"
                 ],
-                context_words=["pis", "número pis", "pispasep"],
                 name="Brazilian PIS",
                 supported_language="pt"
             )
@@ -236,7 +232,6 @@ class DataSecurityScanner:
                 patterns=[
                     r"\d{11}"
                 ],
-                context_words=["cnh", "habilitação", "motorista", "carteira de motorista"],
                 name="Brazilian CNH",
                 supported_language="pt"
             )

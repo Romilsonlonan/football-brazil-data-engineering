@@ -82,7 +82,7 @@ def run():
     # Verificar caracteres especiais em nomes de times
     if 'Time' in df.columns:
         #Regex alinhada com clean_team_name: remove todos os caracteres especiais
-        special_char_pattern = re.compile(r'[^\w\sáéíóúàèìòùãẽĩõũâêîôûç]')
+        special_char_pattern = re.compile(r'[^\w\sáéíóúàèìòùãẽĩõũâêîôûç-]')
         teams_with_special = []
         for idx, time in df['Time'].items():
             if special_char_pattern.search(str(time)):
