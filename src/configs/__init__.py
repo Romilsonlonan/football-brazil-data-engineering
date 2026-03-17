@@ -29,5 +29,16 @@ class Settings(BaseSettings):
     api_key: str = Field(default="")
     """Chave da API para serviços externos."""
 
+    # Airflow
+    airflow_uid: str = Field(default="50000")
+    """UID do usuário Airflow."""
+
+    airflow_gid: str = Field(default="0")
+    """GID do usuário Airflow."""
+
+    # Superset
+    superset_secret_key: str = Field(default="")
+    """Chave secreta do Superset."""
+
 
 settings = Settings()

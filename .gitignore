@@ -176,6 +176,10 @@ agents/
 # Dados 
 data/
 
+# vs code
+.vscode/
+.marscode/
+
 # LSP config files
 pyrightconfig.json
 

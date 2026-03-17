@@ -119,7 +119,7 @@ class ClassificacaoBronzePipeline(BasePipeline):
                     "D": int(derrotas) if derrotas.isdigit() else 0,
                     "GP": int(gp) if gp.isdigit() else 0,
                     "GC": int(gc) if gc.isdigit() else 0,
-                    "SG": int(sg) if sg.isdigit() else 0,
+                    "SG": int(sg) if sg.lstrip('+-').isdigit() else 0,
                     "PTS": int(pts) if pts.isdigit() else 0,
                 })
             

@@ -5,7 +5,7 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'superset') THEN
-        CREATE USER superset WITH PASSWORD 'superset';
+        CREATE USER superset WITH PASSWORD 'superset123';
     END IF;
 END
 $$;
