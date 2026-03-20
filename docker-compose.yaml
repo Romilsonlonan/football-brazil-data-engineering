@@ -1,65 +1,56 @@
 # ============================================
-# Docker Compose - Airflow com Supabase + MinIO
+# Docker Compose - Airflow com SQLite + MinIO
 # ============================================
+x-airflow-common-depends-on:
+  &airflow-common-depends-on {}
+
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-docker.io/apache/airflow:2.10.5}
   env_file:
     - ${ENV_FILE_PATH:-.env}
   environment:
-    &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
-    # PostgreSQL do Supabase
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:Luisassump%401975@db.llnjysvcufwfdeljvzjo.supabase.co:5432/postgres
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://postgres:Luisassump%401975@db.llnjysvcufwfdeljvzjo.supabase.co:5432/postgres
-    # Redis local
-    AIRFLOW__CELERY__BROKER_URL: redis://:admin4321@redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:}
+    #&airflow-common-env
+    # PYTHONPATH para imports do projeto
+    PYTHONPATH: /opt/airflow
+    # SQLite para desenvolvimento local
+    AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    AIRFLOW__CELERY__RESULT_BACKEND: sqlite:////opt/airflow/airflow.db
+    # Redis local (opcional, apenas se precisar de Celery)
+    # AIRFLOW__CELERY__BROKER_URL: redis://:changeme@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    # MinIO Config (comentado temporariamente)
-    # AIRFLOW__CORE__REMOTE_LOGGING: 'true'
-    # AIRFLOW__CELERY__REMOTE_LOG_CONN_ID: 'minio'
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-  user: "0:0"
+  # Airflow image requires GID=0 for security
+  # Use AIRFLOW_UID for UID if needed, but GID must be 0
+  user: "${AIRFLOW_UID:-1000}:${AIRFLOW_GID:-0}"
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - airflow-logs:/opt/airflow/logs
+    - airflow-db:/opt/airflow
+    - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-  depends_on:
-    &airflow-common-depends-on
-    redis:
-      condition: service_healthy
-    minio:
-      condition: service_healthy
   networks:
     - lakehouse-network
 
 services:
-  redis:
-    image: docker.io/library/redis:7.2-bookworm
-    expose:
-      - 6379
-    command: redis-server --requirepass admin4321
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "admin4321", "ping"]
-      interval: 10s
-      timeout: 30s
-      retries: 50
-      start_period: 30s
-    restart: always
-    networks:
-      - lakehouse-network
+  airflow-init:
+    <<: *airflow-common
+    command: airflow db migrate
+    restart: "no"
+    depends_on:
+      <<: *airflow-common-depends-on
 
   minio:
     image: docker.io/minio/minio:latest
     container_name: lakehouse-minio
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
       - "9000:9000"   # API
       - "9001:9001"   # Console
@@ -102,56 +93,89 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
 
-  airflow-worker:
-    <<: *airflow-common
-    command: celery worker
-    healthcheck:
-      test: ["CMD-SHELL", 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+  # ============================================
+  # Apache Superset
+  # ============================================
+  superset:
+    image: apache/superset:4.0.0
+    container_name: lakehouse-superset
     environment:
-      <<: *airflow-common-env
-      DUMB_INIT_SETSID: "0"
-    restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-
-  airflow-triggerer:
-    <<: *airflow-common
-    command: triggerer
-    healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-
-  flower:
-    <<: *airflow-common
-    command: celery flower
-    profiles:
-      - flower
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-changeme_generate_secure_key}
+      ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+      ENABLE_PROXY_FIX: "true"
+      SUPERSET_LOAD_EXAMPLES: "no"
+      WEBDRIVER_TYPE: firefox
+      WEBDRIVER_DOWNLOAD_METHOD: curl
     ports:
-      - "5555:5555"
+      - "8088:8088"
+    volumes:
+      - superset-data:/var/lib/superset
+    command: >
+      bash -c "
+      echo '==> Inicializando Superset...' &&
+      superset db upgrade &&
+      superset fab create-admin --username admin --email admin@superset.com --password ${ADMIN_PASSWORD:-admin} --firstname Admin --lastname User || true &&
+      superset init || true &&
+      echo '==> Iniciando Servidor...' &&
+      superset run -p 8088 --host 0.0.0.0 --with-threads"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5555/"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8088/health').read()"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 120s
+    restart: always
+    networks:
+      - lakehouse-network
+
+  # ============================================
+  # API FastAPI - Brasileirão
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lakehouse-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Configurações MinIO
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ENDPOINT: minio:9000
+      # Configurações API
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      API_DEBUG: "true"
+      DATA_PATH: /app/data
+      PYTHONPATH: /app:/app/src
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/data:/app/data
+    command: >
+      bash -c "
+      echo '==> Iniciando Lakehouse API...' &&
+      python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --log-level debug"
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
       start_period: 30s
     restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
+    networks:
+      - lakehouse-network
 
 volumes:
   minio-data-volume:
   airflow-logs:
+  airflow-db:
+  superset-data:
 
 networks:
   lakehouse-network:

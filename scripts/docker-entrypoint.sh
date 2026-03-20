@@ -16,18 +16,14 @@ echo "==> GID: $(id -g)"
 echo "==> Configurando permissões de diretórios..."
 
 # Criar diretórios se não existirem
-mkdir -p /app/data/bronze
-mkdir -p /app/data/silver
-mkdir -p /app/data/gold
-mkdir -p /app/logs
+# Usar sudo se necessário para criar diretórios
+mkdir -p /app/logs 2>/dev/null || true
 
 # Ajustar ownership para o usuário atual (não usa 777)
 # Isso permite leitura/escrita sem expor a todos
-chown -R "$(whoami):$(whoami)" /app/data 2>/dev/null || true
 chown -R "$(whoami):$(whoami)" /app/logs 2>/dev/null || true
 
 # Garantir permissões de execução em diretórios
-chmod -R u+rwX /app/data 2>/dev/null || true
 chmod -R u+rwX /app/logs 2>/dev/null || true
 
 echo "==> Permissões configuradas"

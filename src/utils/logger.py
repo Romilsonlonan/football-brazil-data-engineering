@@ -1,52 +1,57 @@
-"""Logger configuration using loguru."""
+"""Logger configuration using Python standard logging."""
 
-from pathlib import Path
-from loguru import logger
+import logging
 import sys
+from pathlib import Path
 
 
 def setup_logger(
     log_dir: Path | None = None,
     log_file: str = "lakehouse.log",
-    rotation: str = "10 MB",
-    retention: str = "7 days",
     level: str = "INFO",
-) -> None:
-    """Configure loguru logger with file and console handlers.
+) -> logging.Logger:
+    """Configure Python logger with file and console handlers.
     
     Args:
         log_dir: Directory for log files. If None, uses ./logs
         log_file: Name of the log file
-        rotation: When to rotate the log file
-        retention: How long to keep logs
         level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    """
-    # Remove default handler
-    logger.remove()
     
-    # Console handler with colors
-    logger.add(
-        sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-        level=level,
-        colorize=True,
+    Returns:
+        Configured logger instance
+    """
+    logger = logging.getLogger("lakehouse")
+    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    
+    # Avoid duplicate handlers
+    if logger.handlers:
+        return logger
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setLevel(logging.DEBUG)
+    console_format = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
     )
+    console_handler.setFormatter(console_format)
+    logger.addHandler(console_handler)
     
     # File handler
     log_path = log_dir or Path("logs")
     log_path.mkdir(parents=True, exist_ok=True)
     
-    logger.add(
-        log_path / log_file,
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        rotation=rotation,
-        retention=retention,
-        level=level,
-        encoding="utf-8",
+    file_handler = logging.FileHandler(log_path / log_file, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_format = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
     )
+    file_handler.setFormatter(file_format)
+    logger.addHandler(file_handler)
     
     logger.info(f"Logger initialized. Log file: {log_path / log_file}")
+    
+    return logger
 
 
-# Default configuration
-setup_logger()
+# Create default logger instance
+logger = setup_logger()

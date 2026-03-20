@@ -5,7 +5,7 @@
 FROM python:3.12-slim
 
 # Labels de metadados
-LABEL maintainer="Romilson Luis <romilsonlonan@gmail.com>"
+LABEL maintainer="Romilson Luis"
 LABEL description="Pipeline de dados do Campeonato Brasileiro"
 
 # Variáveis de ambiente
@@ -23,20 +23,35 @@ RUN groupadd --gid 1000 appgroup && \
 WORKDIR /app
 
 # Copia primeiro o arquivo de dependências para cache
-COPY --chown=appuser:appgroup pyproject.toml poetry.lock* ./
+COPY --chown=appuser:appgroup pyproject.toml ./
 
-# Instala dependências
-# Usar pip sem root para segurança, mas com permissões adequadas
-RUN pip install --no-cache-dir --break-system-packages poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi --only main
+# Instala dependências diretamente com pip
+# Inclui todas as dependências do pyproject.toml
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download modelo spacy para português brasileiro (ignora erros se offline)
-RUN python -m spacy download pt_core_news_lg || echo "Aviso: Falha ao baixar modelo spacy - pode causar erros em scanners de segurança"
+RUN pip install --no-cache-dir --break-system-packages \
+    fastapi \
+    uvicorn[standard] \
+    requests \
+    pendulum \
+    rich \
+    pandas \
+    python-dotenv \
+    pydantic-settings \
+    beautifulsoup4 \
+    pyarrow \
+    presidio-analyzer \
+    presidio-anonymizer \
+    spacy \
+    piicatcher
 
 # Copia código fonte
 COPY --chown=appuser:appgroup src/ ./src/
-COPY --chown=appuser:appgroup data/ ./data/
+
+# Copia dados silver (classificação)
+COPY --chown=appuser:appgroup data/silver/ ./data/silver/
 
 # Cria diretórios com permissões corretas
 RUN mkdir -p /app/data/bronze /app/data/silver /app/data/gold /app/logs && \

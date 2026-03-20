@@ -37,26 +37,15 @@ class ClassificacaoBronzePipeline(BasePipeline):
         
         import requests
         from bs4 import BeautifulSoup
-        from rich.console import Console
-        from rich.table import Table
-        from rich.panel import Panel
-        from rich import box
-        
-        console = Console()
         
         url = "https://www.espn.com.br/futebol/classificacao/_/liga/bra.1/temporada/2026"
         
         try:
-            console.print(Panel.fit(
-                "[bold cyan]📊 CLASSIFICAÇÃO BRASILEIRÃO 2026[/bold cyan]\n"
-                "[dim]Dados extraídos da ESPN[/dim]",
-                border_style="cyan",
-                title="🏆 Tabela Bronze"
-            ))
+            logger.info("📊 CLASSIFICACAO BRASILEIRAO 2026 - Dados extraidos da ESPN")
             
             response = requests.get(url, headers=self.headers, timeout=30)
             response.raise_for_status()
-            console.print(f"[green]✅ Resposta: {response.status_code}[/green]")
+            logger.info(f"Resposta: {response.status_code}")
             
             soup = BeautifulSoup(response.content, "html.parser")
             
@@ -71,13 +60,13 @@ class ClassificacaoBronzePipeline(BasePipeline):
                     tabela_stats = tabelas[1]
                 else:
                     logger.warning("Tabelas não encontradas no HTML da página")
-                    console.print("[red]❌ Tabelas não encontradas![/red]")
+                    logger.error("Tabelas não encontradas!")
                     return pd.DataFrame()
             
             linhas_nomes = tabela_nomes.select("tbody tr")
             linhas_stats = tabela_stats.select("tbody tr")
             
-            console.print(f"\n[cyan]📊 Times encontrados: {len(linhas_nomes)}[/cyan]\n")
+            logger.info(f"Times encontrados: {len(linhas_nomes)}")
             
             # Processar dados
             dados = []
@@ -126,48 +115,19 @@ class ClassificacaoBronzePipeline(BasePipeline):
             df = pd.DataFrame(dados)
             
             # Mostrar tabela
-            console.print(f"\n[bold cyan]📊 TABELA BRASILEIRÃO 2026[/bold cyan]\n")
+            logger.info("TABELA BRASILEIRAO 2026")
             
-            table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
-            table.add_column("Pos", style="cyan", justify="center", width=4)
-            table.add_column("Time", style="yellow", width=20)
-            table.add_column("J", style="white", justify="center", width=3)
-            table.add_column("V", style="green", justify="center", width=3)
-            table.add_column("E", style="yellow", justify="center", width=3)
-            table.add_column("D", style="red", justify="center", width=3)
-            table.add_column("GP", style="white", justify="center", width=3)
-            table.add_column("GC", style="white", justify="center", width=3)
-            table.add_column("SG", style="white", justify="center", width=3)
-            table.add_column("PTS", style="bold cyan", justify="center", width=4)
+            for _, row in df.iterrows():
+                logger.info(f"Pos: {row['Posição']:2d} | Time: {row['Time'][:18]:18s} | J: {row['J']:2d} | V: {row['V']:2d} | E: {row['E']:2d} | D: {row['D']:2d} | GP: {row['GP']:3d} | GC: {row['GC']:3d} | SG: {row['SG']:+3d} | PTS: {row['PTS']:3d}")
             
-            for _, row in df.head(20).iterrows():
-                # Colorir posições
-                pos_style = "bold green" if row["Posição"] <= 4 else \
-                           "bold yellow" if row["Posição"] <= 6 else \
-                           "bold red" if row["Posição"] >= 17 else ""
-                
-                table.add_row(
-                    str(row["Posição"]),
-                    row["Time"][:18],
-                    str(row["J"]),
-                    str(row["V"]),
-                    str(row["E"]),
-                    str(row["D"]),
-                    str(row["GP"]),
-                    str(row["GC"]),
-                    str(row["SG"]),
-                    str(row["PTS"]),
-                )
-            
-            console.print(table)
-            console.print(f"\n[dim]Mostrando {len(df)} times[/dim]")
+            logger.info(f"Mostrando {len(df)} times")
             
             return df
             
         except Exception as e:
             logger.error(f"Erro ao extrair classificação: {e}")
             logger.warning("Retornando DataFrame vazio devido ao erro")
-            console.print(f"[red]❌ Erro: {e}[/red]")
+            logger.error(f"Erro: {e}")
             return pd.DataFrame()
     
     def transform(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:

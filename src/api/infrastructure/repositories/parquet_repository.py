@@ -4,6 +4,8 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Optional
 
+import os
+
 from src.api.domain.entities.classificacao import Classificacao
 from src.api.domain.entities.time import Time
 from src.api.domain.entities.vagas import VagasConfig
@@ -23,8 +25,9 @@ class ParquetClassificacaoRepository(IClassificacaoRepository):
         """
         if parquet_path is None:
             # Caminho padrão para o arquivo silver tratado
-            base_path = Path(__file__).parent.parent.parent.parent
-            parquet_path = base_path / "data" / "silver" / "classificacao-tratada.parquet"
+            # Usa variável de ambiente DATA_PATH ou padrão /app/data
+            data_path = os.environ.get("DATA_PATH", "/app/data")
+            parquet_path = Path(f"{data_path}/silver/classificacao-limpa.parquet")
         
         self._parquet_path = parquet_path
         self._df: Optional[pd.DataFrame] = None
@@ -53,14 +56,14 @@ class ParquetClassificacaoRepository(IClassificacaoRepository):
         classificacao = Classificacao(
             posicao=int(row.get("Posição", row.get("posicao", 0))),
             time=time,
-            jogos=int(row.get("J", row.get("jogos", 0))),
-            vitorias=int(row.get("V", row.get("vitorias", 0))),
-            empates=int(row.get("E", row.get("empates", 0))),
-            derrotas=int(row.get("D", row.get("derrotas", 0))),
-            gp=int(row.get("GP", row.get("gp", 0))),
-            gc=int(row.get("GC", row.get("gc", 0))),
-            sg=int(row.get("SG", row.get("sg", 0))),
-            pontos=int(row.get("PTS", row.get("pontos", 0))),
+            jogos=int(row.get("Jogos", row.get("jogos", 0))),
+            vitorias=int(row.get("Vitorias", row.get("vitorias", 0))),
+            empates=int(row.get("Empates", row.get("empates", 0))),
+            derrotas=int(row.get("Derrotas", row.get("derrotas", 0))),
+            gp=int(row.get("GolsPro", row.get("gp", 0))),
+            gc=int(row.get("GolsContra", row.get("gc", 0))),
+            sg=int(row.get("SaldoGols", row.get("sg", 0))),
+            pontos=int(row.get("Pontos", row.get("pontos", 0))),
             temporada=temporada
         )
         

@@ -3,17 +3,18 @@ DAG Silver - Classificação Tratada
 ===================================
 Pipeline de limpeza e tratamento dos dados de classificação do Brasileirão.
 
-Esta DAG processa dados da camada Bronze para Silver usandoTask Groups e Tags
+Esta DAG processa dados da camada Bronze para Silver usando Task Groups e Tags
 para melhor organização e monitoramento.
 
 Tags: silver, lakehouse, football, classificacao, cleaning
 """
 
-from airflow.decorators import dag, task, task_group
 from datetime import datetime, timedelta
-from airflow.utils.task_group import TaskGroup
+import logging
 
-from src.utils.logger import logger
+from airflow import DAG
+from airflow.decorators import task
+from airflow.decorators import task_group
 
 
 # Configuração padrão da DAG
@@ -27,7 +28,7 @@ default_args = {
 }
 
 
-@dag(
+with DAG(
     dag_id="silver_classificacao_pipeline",
     start_date=datetime(2025, 1, 1),
     schedule_interval="0 6 * * *",  # Executa diariamente às 6:00
@@ -35,13 +36,12 @@ default_args = {
     tags=["silver", "lakehouse", "football", "classificacao"],
     default_args=default_args,
     description="Pipeline de limpeza dos dados de classificação do Brasileirão"
-)
-def silver_classificacao_pipeline():
+) as dag:
     """
     Pipeline Silver para processamento de dados de classificação.
     
     Fluxo:
-    1. Executa pipeline de limpeza (classificacao-tratada.py)
+    1. Executa pipeline de limpeza (classificacao_tratada.py)
     2. Valida os dados processados
     3. Gera relatório de qualidade
     """
@@ -55,33 +55,37 @@ def silver_classificacao_pipeline():
         
         @task(
             task_id="run_classificacao_pipeline",
-            retries=2,
-            tags=["classificacao", "cleaning", "etl"]
+            retries=2
         )
-        def run_classificacao_pipeline():
+        def run_classificacao_pipeline() -> str:
             """Executa o pipeline de limpeza de classificação."""
             import sys
-            sys.path.insert(0, '/app')
+            import os
+            # Adicionar o caminho do projeto ao sys.path
+            # O volume src é montado em /opt/airflow/src no container Airflow
+            project_root = os.environ.get('AIRFLOW_PROJECT_ROOT', '/opt/airflow')
+            sys.path.insert(0, project_root)
             
+            # Import local para evitar lentidão no carregamento do DAG
             from src.pipelines.silver.classificacao_tratada import run
             
-            logger.info("🚀 Iniciando pipeline de classificação...")
+            logger = logging.getLogger(__name__)
+            logger.info("Iniciando pipeline de classificacao...")
             output_path = run()
-            logger.info(f"✅ Pipeline concluído: {output_path}")
+            logger.info(f"Pipeline concluido: {output_path}")
             
             return str(output_path)
         
         
         @task(
-            task_id="validate_silver_classificacao",
-            tags=["classificacao", "validation", "quality"]
+            task_id="validate_silver_classificacao"
         )
-        def validate_silver_classificacao(file_path: str):
+        def validate_silver_classificacao(file_path: str) -> dict:
             """Valida os dados processados na camada Silver."""
             import pandas as pd
-            from pathlib import Path
             
-            logger.info(f"🔍 Validando dados em: {file_path}")
+            logger = logging.getLogger(__name__)
+            logger.info(f"Validando dados em: {file_path}")
             
             df = pd.read_parquet(file_path)
             
@@ -95,16 +99,16 @@ def silver_classificacao_pipeline():
             
             # Log dos resultados
             for check, result in validations.items():
-                status = "✅" if result else "❌"
+                status = "OK" if result else "FALHA"
                 logger.info(f"{status} {check}: {result}")
             
             # Verificar se todas as validações passaram
             all_passed = all(validations.values())
             
             if all_passed:
-                logger.info(f"✅ Validação concluída: {len(df)} linhas processadas com sucesso!")
+                logger.info(f"Validacao concluida: {len(df)} linhas processadas com sucesso!")
             else:
-                logger.error("❌ Validações falharam!")
+                logger.error("Validacoes falharam!")
                 raise ValueError("Validações de qualidade não passaram")
             
             return {
@@ -115,13 +119,13 @@ def silver_classificacao_pipeline():
         
         
         @task(
-            task_id="generate_quality_report",
-            tags=["classificacao", "reporting", "quality"]
+            task_id="generate_quality_report"
         )
-        def generate_quality_report(validation_result: dict):
+        def generate_quality_report(validation_result: dict) -> dict:
             """Gera relatório de qualidade dos dados processados."""
-            import json
             from datetime import datetime
+            
+            logger = logging.getLogger(__name__)
             
             report = {
                 "timestamp": datetime.now().isoformat(),
@@ -135,7 +139,7 @@ def silver_classificacao_pipeline():
             }
             
             logger.info("=" * 50)
-            logger.info("📊 RELATÓRIO DE QUALIDADE - SILVER")
+            logger.info("RELATORIO DE QUALIDADE - SILVER")
             logger.info("=" * 50)
             logger.info(f"Tabela: classificacao")
             logger.info(f"Linhas processadas: {report['rows_processed']}")
@@ -152,7 +156,3 @@ def silver_classificacao_pipeline():
     
     # Executar o grupo de tarefas
     bronze_to_silver_classificacao()
-
-
-# Instanciar a DAG
-silver_classificacao_dag = silver_classificacao_pipeline()

@@ -48,7 +48,9 @@ docs/
 .env.local
 
 # Dados (não copiar para imagem, usar volumes)
-data/
+# data/
+# Mas permitir arquivos silver (dados processados)
+!data/silver/*.parquet
 # Mas permitir estrutura de diretórios vazios
 !data/bronze/.gitkeep
 !data/silver/.gitkeep
@@ -63,7 +65,6 @@ docker-compose.yml
 k8s/
 
 # Lock files (já copiado durante build)
-poetry.lock
 
 # Cache
 .cache/

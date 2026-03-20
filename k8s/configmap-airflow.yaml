@@ -30,7 +30,8 @@ data:
   AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
   
   # Database Configuration
-  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://lakehouse:lakehouse123@lakehouse-postgres:5432/lakehouse"
+  # Nota: Use secret externo em produção
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://lakehouse@lakehouse-postgres:5432/lakehouse"
   
   # Webserver Configuration
   AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
@@ -97,7 +98,8 @@ data:
   MINIO_NOTIFY_WEBHOOK_QUEUE_LIMIT: ""
   MINIO_NOTIFY_WEBHOOK_ENDPOINT: ""
   MINIO_ROOT_USER: "minioadmin"
-  MINIO_ROOT_PASSWORD: "minioadmin123"
+  # Nota: Use secret externo em produção
+  MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
   MINIO_SITE_NAME: "lakehouse"
   MINIO_SITE_REGION: ""
   MINIO_STORAGE_CLASS_STANDARD: ""

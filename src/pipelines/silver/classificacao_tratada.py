@@ -3,27 +3,22 @@
 import pandas as pd
 from pathlib import Path
 import re
+import logging
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich import box
+# Configurar logger padrão
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 from src.configs import settings
-from src.utils.logger import logger
 from src.security.data_scanner import DataSecurityScanner
 
 
 def run():
     """Executa o pipeline de limpeza dos dados de classificação."""
-    console = Console()
-    
-    console.print(Panel.fit(
-        "[bold cyan]🧹 PIPELINE SILVER - CLASSIFICAÇÃO TRATADA[/bold cyan]\n"
-        "[dim]Limpeza e tratamento de dados[/dim]",
-        border_style="cyan",
-        title="⚙️ ETL Silver"
-    ))
+    logger.info("=" * 60)
+    logger.info("🧹 PIPELINE SILVER - CLASSIFICACAO TRATADA")
+    logger.info("Limpeza e tratamento de dados")
+    logger.info("=" * 60)
     
     logger.info("=" * 60)
     logger.info("INICIANDO PIPELINE SILVER - CLASSIFICACAO")
@@ -97,8 +92,7 @@ def run():
     
     logger.info("")
     logger.info("📋 Dados originais (antes da limpeza):")
-    console.print("\n[bold]Dados Originais:[/bold]")
-    console.print(df.to_string())
+    logger.info(df.to_string())
     
     # Transformação: Limpeza e higienização
     df_clean = clean_classificacao(df)
@@ -127,11 +121,7 @@ def run():
     # ============================================
     logger.info("")
     logger.info("=" * 60)
-    console.print(Panel.fit(
-        "[bold green]✅ RELATÓRIO DE DIAGNÓSTICO - DEPOIS DA LIMPEZA[/bold green]",
-        border_style="green",
-        title="🔍 Diagnóstico"
-    ))
+    logger.info("✅ RELATÓRIO DE DIAGNOSTICO - DEPOIS DA LIMPEZA")
     logger.info("=" * 60)
     logger.info(f"Total de linhas processadas: {len(df_clean)}")
     logger.info(f"Linhas removidas (duplicatas): {len(df) - len(df_clean)}")
@@ -158,45 +148,19 @@ def run():
     logger.info("")
     logger.info("📋 Dados limpos (após limpeza):")
     
-    # Criar tabela de resultados
-    table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
-    table.add_column("Pos", style="cyan", justify="center", width=4)
-    table.add_column("Time", style="yellow", width=20)
-    table.add_column("Jogos", style="white", justify="center", width=5)
-    table.add_column("Vitórias", style="green", justify="center", width=7)
-    table.add_column("Empates", style="yellow", justify="center", width=7)
-    table.add_column("Derrotas", style="red", justify="center", width=8)
-    table.add_column("GolsPro", style="white", justify="center", width=7)
-    table.add_column("GolsCon", style="white", justify="center", width=8)
-    table.add_column("Saldo", style="white", justify="center", width=6)
-    table.add_column("Pontos", style="bold cyan", justify="center", width=7)
+    # Mostrar resultados
+    logger.info("")
+    logger.info("📊 TABELA CLASSIFICACAO TRATADA")
+    logger.info("-" * 80)
     
-    for _, row in df_clean.head(20).iterrows():
-        pos_style = "bold green" if row["Posição"] <= 4 else \
-                   "bold yellow" if row["Posição"] <= 6 else \
-                   "bold red" if row["Posição"] >= 17 else ""
-        
-        table.add_row(
-            str(row["Posição"]),
-            row["Time"][:18],
-            str(row["Jogos"]),
-            str(row["Vitorias"]),
-            str(row["Empates"]),
-            str(row["Derrotas"]),
-            str(row["GolsPro"]),
-            str(row["GolsContra"]),
-            str(row["SaldoGols"]),
-            str(row["Pontos"]),
+    for _, row in df_clean.iterrows():
+        logger.info(
+            f"Pos: {row['Posição']:2d} | Time: {row['Time'][:18]:18s} | "
+            f"J: {row['Jogos']:2d} | V: {row['Vitorias']:2d} | E: {row['Empates']:2d} | D: {row['Derrotas']:2d} | "
+            f"GP: {row['GolsPro']:3d} | GC: {row['GolsContra']:3d} | SG: {row['SaldoGols']:+3d} | PTS: {row['Pontos']:3d}"
         )
     
-    console.print("\n")
-    console.print(Panel.fit(
-        "[bold cyan]📊 TABELA CLASSIFICAÇÃO TRATADA[/bold cyan]",
-        border_style="cyan",
-        title="🏆 Resultado"
-    ))
-    console.print(table)
-    console.print(f"\n[dim]Mostrando {len(df_clean)} times[/dim]")
+    logger.info(f"Total: {len(df_clean)} times")
     
     # Salvar no diretório silver
     output_path = settings.silver_path / "classificacao-limpa.parquet"
@@ -205,12 +169,8 @@ def run():
     logger.info(f"Dados limpos salvos em: {output_path}")
     
     logger.info("=" * 60)
-    console.print(Panel.fit(
-        "[bold green]🎉 PIPELINE SILVER - CLASSIFICAÇÃO CONCLUÍDO[/bold green]\n"
-        f"[dim]Arquivo salvo em: {output_path}[/dim]",
-        border_style="green",
-        title="✅ Sucesso"
-    ))
+    logger.info("🎉 PIPELINE SILVER - CLASSIFICACAO CONCLUIDO")
+    logger.info(f"Arquivo salvo em: {output_path}")
     logger.info("=" * 60)
     logger.info("PIPELINE SILVER - CLASSIFICACAO CONCLUIDO")
     logger.info("=" * 60)
@@ -342,8 +302,8 @@ def clean_team_name(name: str) -> str:
     # Converter para string
     name = str(name)
     
-    # Remover caracteres especiais, mantendo apenas letras, números e espaços
-    name = re.sub(r'[^\w\s]', '', name)
+    # Remover caracteres especiais, mantendo letras (incluindo acentos), números e espaços
+    name = re.sub(r'[^\w\sáéíóúàèìòùãẽĩõũâêîôûç-]', '', name)
     
     # Remover espaços extras
     name = ' '.join(name.split())
