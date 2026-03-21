@@ -18,7 +18,7 @@ x-airflow-common:
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
     AIRFLOW__CELERY__RESULT_BACKEND: sqlite:////opt/airflow/airflow.db
     # Redis local (opcional, apenas se precisar de Celery)
-    # AIRFLOW__CELERY__BROKER_URL: redis://:changeme@redis:6379/0
+    # AIRFLOW__CELERY__BROKER_URL: redis://:admin4321@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
@@ -27,20 +27,37 @@ x-airflow-common:
   # Use AIRFLOW_UID for UID if needed, but GID must be 0
   user: "${AIRFLOW_UID:-1000}:${AIRFLOW_GID:-0}"
   volumes:
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags:z
     - airflow-logs:/opt/airflow/logs
     - airflow-db:/opt/airflow
-    - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
-    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src:z
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data:z
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config:z
+    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins:z
   networks:
     - lakehouse-network
 
 services:
   airflow-init:
     <<: *airflow-common
-    command: airflow db migrate
+    command: >
+      bash -c "
+      echo '==> Criando banco de dados...' &&
+      airflow db migrate &&
+      echo '==> Criando usuário admin...' &&
+      airflow users create \
+        --username ${AIRFLOW_USERNAME} \
+        --password ${AIRFLOW_PASSWORD} \
+        --firstname Admin \
+        --lastname User \
+        --email admin@lakehouse.com \
+        --role Admin \
+        || echo 'Usuário já existe ou erro na criação' &&
+      echo '==> Inicialização concluída!'
+      "
+    environment:
+      AIRFLOW_USERNAME: ${AIRFLOW_USERNAME}
+      AIRFLOW_PASSWORD: ${AIRFLOW_PASSWORD}
     restart: "no"
     depends_on:
       <<: *airflow-common-depends-on
