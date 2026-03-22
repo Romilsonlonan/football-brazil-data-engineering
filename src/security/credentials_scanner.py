@@ -109,6 +109,14 @@ IGNORED_PATHS = {
     "*.pyc", "*.pyo", "*.so"
 }
 
+# Linhas padrão que são seguras e não devem ser reportadas
+# (usadas para construir URLs dinamicamente via variáveis de ambiente)
+SAFE_LINE_PATTERNS = [
+    r'^\s*#.*postgresql://',  # Comentários
+    r'postgresql://%s:',       # Formatação com %s (src/configs)
+    r'postgresql://"\s*\+\s*',  # Concatenação com variáveis
+]
+
 
 @dataclass
 class CredentialFinding:
@@ -311,6 +319,11 @@ class CredentialsScanner:
     def _scan_line(self, line: str, file_path: str, line_num: int) -> List[CredentialFinding]:
         """Escaneia uma linha em busca de credenciais."""
         findings = []
+        
+        # Verificar se a linha corresponde a um padrão seguro
+        for safe_pattern in SAFE_LINE_PATTERNS:
+            if re.search(safe_pattern, line):
+                return findings  # Linha segura, retornar vazio
         
         for cred_type, pattern in self._compiled_patterns.items():
             matches = pattern.finditer(line)

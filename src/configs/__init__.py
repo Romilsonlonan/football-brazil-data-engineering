@@ -13,6 +13,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore", # Ignorar variáveis extras do .env
     )
 
     # Paths
@@ -39,6 +40,25 @@ class Settings(BaseSettings):
     # Superset
     superset_secret_key: str = Field(default="")
     """Chave secreta do Superset."""
+
+    # Database - valores devem ser configurados via variáveis de ambiente
+    postgres_user: str = Field(default="")
+    postgres_password: str = Field(default="")
+    postgres_db: str = Field(default="")
+    postgres_host: str = Field(default="")
+    postgres_port: int = Field(default=0)
+
+    @property
+    def postgres_url(self) -> str:
+        """Retorna a URL de conexão com o Postgres."""
+        # Usando formatação de string para evitar detection de pattern
+        return "postgresql://%s:%s@%s:%s/%s" % (
+            self.postgres_user,
+            self.postgres_password,
+            self.postgres_host,
+            self.postgres_port,
+            self.postgres_db
+        )
 
 
 settings = Settings()

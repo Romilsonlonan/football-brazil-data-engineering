@@ -148,10 +148,66 @@ with DAG(
             
             return report
         
+        
+        @task(
+            task_id="export_to_postgres"
+        )
+        def export_to_postgres(file_path: str) -> dict:
+            """Exporta os dados processados para o PostgreSQL do Superset."""
+            import pandas as pd
+            from sqlalchemy import create_engine
+            import os
+            
+            logger = logging.getLogger(__name__)
+            logger.info(f"Exportando dados para PostgreSQL: {file_path}")
+            
+            # Lê o arquivo Parquet
+            df = pd.read_parquet(file_path)
+            
+            # Renomeia colunas para o PostgreSQL
+            df_postgres = df.rename(columns={
+                'Posição': 'posicao',
+                'Time': 'time',
+                'Jogos': 'jogos',
+                'Vitorias': 'vitorias',
+                'Empates': 'empates',
+                'Derrotas': 'derrotas',
+                'GolsPro': 'gols_pro',
+                'GolsContra': 'gols_contra',
+                'SaldoGols': 'saldo_gols',
+                'Pontos': 'pontos'
+            })
+            
+            # Conexão com PostgreSQL
+            postgres_conn = os.environ.get(
+                "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN",
+                "postgresql+psycopg2://airflow:airflow123@postgres/airflow"
+            )
+            
+            engine = create_engine(postgres_conn)
+            
+            # Insere os dados (substitui a tabela)
+            df_postgres.to_sql(
+                'classificacao_silver',
+                engine,
+                if_exists='replace',
+                index=False
+            )
+            
+            logger.info(f"✅ Exportados {len(df_postgres)} registros para PostgreSQL")
+            
+            return {
+                "rows_exported": len(df_postgres),
+                "table": "classificacao_silver"
+            }
+        
         # Definir dependências entre tarefas
         file_path = run_classificacao_pipeline()
         validation_result = validate_silver_classificacao(file_path)
-        generate_quality_report(validation_result)
+        quality_report = generate_quality_report(validation_result)
+        
+        # Exportar para PostgreSQL (após validação)
+        export_result = export_to_postgres(file_path)
     
     
     # Executar o grupo de tarefas
