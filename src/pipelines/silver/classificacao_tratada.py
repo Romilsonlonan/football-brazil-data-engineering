@@ -162,6 +162,20 @@ def run():
     
     logger.info(f"Total: {len(df_clean)} times")
     
+    # Renomear colunas para evitar problemas com caracteres especiais no banco
+    df_clean = df_clean.rename(columns={
+        'Posição': 'posicao',
+        'Time': 'time',
+        'Jogos': 'jogos',
+        'Vitorias': 'vitorias',
+        'Empates': 'empates',
+        'Derrotas': 'derrotas',
+        'GolsPro': 'gols_pro',
+        'GolsContra': 'gols_contra',
+        'SaldoGols': 'saldo_gols',
+        'Pontos': 'pontos'
+    })
+    
     # Salvar no diretório silver
     output_path = settings.silver_path / "classificacao-limpa.parquet"
     output_path.parent.mkdir(parents=True, exist_ok=True)
