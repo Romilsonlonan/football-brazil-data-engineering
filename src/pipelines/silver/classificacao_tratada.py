@@ -4,10 +4,22 @@ import pandas as pd
 from pathlib import Path
 import re
 import logging
+from rich.console import Console
+from rich.table import Table
+from rich.theme import Theme
 
 # Configurar logger padrão
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Criar console Rich com tema customizado
+custom_theme = Theme({
+    "info": "cyan",
+    "warning": "yellow",
+    "error": "bold red",
+    "success": "bold green",
+})
+console = Console(theme=custom_theme)
 
 from src.configs import settings
 from src.security.data_scanner import DataSecurityScanner
@@ -148,19 +160,54 @@ def run():
     logger.info("")
     logger.info("📋 Dados limpos (após limpeza):")
     
-    # Mostrar resultados
-    logger.info("")
-    logger.info("📊 TABELA CLASSIFICACAO TRATADA")
-    logger.info("-" * 80)
+    # Mostrar resultados com tabela Rich
+    console.print("")
+    console.print("[bold cyan]📊 TABELA CLASSIFICAÇÃO TRATADA[/bold cyan]")
     
+    # Criar tabela Rich
+    table = Table(title="[bold green]Classificação Brasileirão - Dados Tratados[/bold green]", show_header=True, header_style="bold magenta")
+    
+    # Adicionar colunas
+    table.add_column("Posição", style="cyan", justify="center", width=4)
+    table.add_column("Time", style="green", width=20)
+    table.add_column("J", style="white", justify="center", width=3)  # Jogos
+    table.add_column("V", style="yellow", justify="center", width=3)  # Vitórias
+    table.add_column("E", style="blue", justify="center", width=3)   # Empates
+    table.add_column("D", style="red", justify="center", width=3)    # Derrotas
+    table.add_column("GP", style="white", justify="center", width=4) # Gols Pró
+    table.add_column("GC", style="white", justify="center", width=4) # Gols Contra
+    table.add_column("SG", style="white", justify="center", width=4) # Saldo de Gols
+    table.add_column("PTS", style="bold yellow", justify="center", width=5) # Pontos
+    
+    # Adicionar linhas
     for _, row in df_clean.iterrows():
-        logger.info(
-            f"Pos: {row['Posição']:2d} | Time: {row['Time'][:18]:18s} | "
-            f"J: {row['Jogos']:2d} | V: {row['Vitorias']:2d} | E: {row['Empates']:2d} | D: {row['Derrotas']:2d} | "
-            f"GP: {row['GolsPro']:3d} | GC: {row['GolsContra']:3d} | SG: {row['SaldoGols']:+3d} | PTS: {row['Pontos']:3d}"
+        # Colorir posição baseada no ranking
+        if row['Posição'] <= 4:
+            pos_style = "bold green"  # Libertadores
+        elif row['Posição'] <= 6:
+            pos_style = "bold cyan"   # Pré-libertadores
+        elif row['Posição'] <= 12:
+            pos_style = "bold yellow" # Sul-americana
+        elif row['Posição'] >= 17:
+            pos_style = "bold red"    # Rebaixados
+        else:
+            pos_style = "white"
+        
+        table.add_row(
+            f"[{pos_style}]{row['Posição']}[/{pos_style}]",
+            row['Time'][:20],
+            str(row['Jogos']),
+            str(row['Vitorias']),
+            str(row['Empates']),
+            str(row['Derrotas']),
+            str(row['GolsPro']),
+            str(row['GolsContra']),
+            str(row['SaldoGols']),
+            str(row['Pontos'])
         )
     
-    logger.info(f"Total: {len(df_clean)} times")
+    console.print(table)
+    console.print(f"[bold]Total:[/bold] [cyan]{len(df_clean)}[/cyan] times")
     
     # Renomear colunas para evitar problemas com caracteres especiais no banco
     df_clean = df_clean.rename(columns={

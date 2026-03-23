@@ -146,7 +146,7 @@ services:
     stop_grace_period: 30s
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-changeme_generate_secure_key}
-      ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+      ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin4321}
       ENABLE_PROXY_FIX: "true"
       SUPERSET_LOAD_EXAMPLES: "no"
       WEBDRIVER_TYPE: firefox
