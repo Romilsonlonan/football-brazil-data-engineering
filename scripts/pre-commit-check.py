@@ -235,6 +235,7 @@ class CredentialsScanner:
     IGNORE_PATTERNS = [
         "src/security/",  #scanner de credenciais detecta seus próprios padrões
         "src/api/infrastructure/database/connection.py",  #usa variáveis de ambiente
+        "src/pipelines/gold/carga_classificacao.py", #usa configurações do settings
         "k8s/",  #templates K8s usam placeholders
         "docker-compose.yaml",  #usa variáveis de ambiente com placeholders
         ".env.example",  #arquivo de exemplo com placeholders

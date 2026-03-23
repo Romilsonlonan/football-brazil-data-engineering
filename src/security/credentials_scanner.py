@@ -77,8 +77,8 @@ CREDENTIAL_PATTERNS = {
     "SSH_PRIVATE_KEY": r"-----BEGIN OPENSSH PRIVATE KEY-----",
     "PGP_PRIVATE_KEY": r"-----BEGIN PGP PRIVATE KEY BLOCK-----",
     
-    # Generic Passwords (variáveis contendo password/pass/secret)
-    "PASSWORD_VAR": r"(?:password|passwd|pwd|secret|PASSWORD|PASSWD|SECRET)\s*[=:]\s*['\"]?([^\s'\"]{8,})['\"]?",
+    # Generic Passwords (variáveis contendo password/pass/secret atribuídas a strings)
+    "PASSWORD_VAR": r"(?:password|passwd|pwd|secret|PASSWORD|PASSWD|SECRET)\s*[=:]\s*['\"]([^\s'\"]{8,})['\"]",
     
     # Fernet Keys (Airflow)
     "FERNET_KEY": r"(?:fernet_key|FERNET_KEY)\s*[=:]\s*([A-Za-z0-9\-_]{44})",
