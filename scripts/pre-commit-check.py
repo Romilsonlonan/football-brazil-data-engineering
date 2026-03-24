@@ -358,46 +358,53 @@ def main():
     print("🔒 VERIFICAÇÃO DE SEGURANÇA - PRÉ-COMMIT")
     print(f"{'='*60}{Colors.NC}\n")
     
-    # Verifica se está em repositório git
-    try:
-        subprocess.run(["git", "rev-parse", "--git-dir"], 
-                      check=True, capture_output=True)
-    except subprocess.CalledProcessError:
-        logger.error("Não está em um repositório git")
-        sys.exit(1)
-    
-    # Obtém arquivos modificados
-    try:
-        staged = subprocess.run(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
-            capture_output=True, text=True
-        ).stdout.strip()
-        
-        modified = subprocess.run(
-            ["git", "diff", "--name-only", "--diff-filter=ACM"],
-            capture_output=True, text=True
-        ).stdout.strip()
-        
-        all_files = list(set(
-            f for f in (staged + "\n" + modified).split("\n") 
-            if f and Path(f).exists()
-        ))
-        
-        # Filtrar arquivos ignorados pelo .gitignore
+    # Se estiver em modo CI, verifica todos os arquivos relevantes
+    ci_mode = "--ci-mode" in sys.argv
+    if ci_mode:
+        logger.info("Modo CI detectado - Verificando todos os arquivos relevantes")
+        # Lista recursivamente todos os arquivos, ignorando .git e logs
+        all_files = [str(p) for p in Path(".").rglob("*") if p.is_file() and not any(part.startswith('.') for part in p.parts) and "logs" not in str(p)]
+    else:
+        # Verifica se está em repositório git
         try:
-            git_ignore = subprocess.run(
-                ["git", "check-ignore", "--no-index"] + all_files,
+            subprocess.run(["git", "rev-parse", "--git-dir"], 
+                          check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            logger.error("Não está em um repositório git")
+            sys.exit(1)
+        
+        # Obtém arquivos modificados
+        try:
+            staged = subprocess.run(
+                ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
                 capture_output=True, text=True
-            ).stdout.strip().split("\n")
-            ignored_files = set(f for f in git_ignore if f)
-            all_files = [f for f in all_files if f not in ignored_files]
-            if ignored_files:
-                logger.info(f"Arquivos ignorados pelo .gitignore: {len(ignored_files)}")
-        except Exception:
-            pass  # Se falhar, continua com todos os arquivos
-    except Exception as e:
-        logger.error(f"Erro ao obter arquivos: {e}")
-        sys.exit(1)
+            ).stdout.strip()
+            
+            modified = subprocess.run(
+                ["git", "diff", "--name-only", "--diff-filter=ACM"],
+                capture_output=True, text=True
+            ).stdout.strip()
+            
+            all_files = list(set(
+                f for f in (staged + "\n" + modified).split("\n") 
+                if f and Path(f).exists()
+            ))
+            
+            # Filtrar arquivos ignorados pelo .gitignore
+            try:
+                git_ignore = subprocess.run(
+                    ["git", "check-ignore", "--no-index"] + all_files,
+                    capture_output=True, text=True
+                ).stdout.strip().split("\n")
+                ignored_files = set(f for f in git_ignore if f)
+                all_files = [f for f in all_files if f not in ignored_files]
+                if ignored_files:
+                    logger.info(f"Arquivos ignorados pelo .gitignore: {len(ignored_files)}")
+            except Exception:
+                pass  # Se falhar, continua com todos os arquivos
+        except Exception as e:
+            logger.error(f"Erro ao obter arquivos: {e}")
+            sys.exit(1)
     
     if not all_files:
         logger.success("Nenhum arquivo modificado para verificar")

@@ -25,6 +25,8 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Limitar memória do Airflow
+    AIRFLOW__CORE__DEFAULT_UI_TIMEZONE: 'America/Sao_Paulo'
   # Airflow image requires GID=0 for security
   # Use AIRFLOW_UID for UID if needed, but GID must be 0
   user: "${AIRFLOW_UID:-1000}:${AIRFLOW_GID:-0}"
@@ -35,6 +37,12 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data:z
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config:z
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins:z
+  deploy:
+    resources:
+      limits:
+        memory: 2G
+      reservations:
+        memory: 512M
   networks:
     - lakehouse-network
 
@@ -83,6 +91,12 @@ services:
       timeout: 20s
       retries: 5
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
     networks:
       - lakehouse-network
 
@@ -104,6 +118,12 @@ services:
       timeout: 20s
       retries: 3
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
     networks:
       - lakehouse-network
 
@@ -149,12 +169,19 @@ services:
       ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin4321}
       ENABLE_PROXY_FIX: "true"
       SUPERSET_LOAD_EXAMPLES: "no"
-      WEBDRIVER_TYPE: firefox
-      WEBDRIVER_DOWNLOAD_METHOD: curl
+      # Configurações de memória do Superset
+      SUPERSET_WEBSERVER_TIMEOUT: 60
+      SUPERSET_WEBSERVER_WORKERS: 1
     ports:
       - "8088:8088"
     volumes:
       - superset-data:/var/lib/superset
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
     command: >
       bash -c "
       echo '==> Inicializando Superset...' &&
@@ -208,8 +235,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 10s
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
     networks:
       - lakehouse-network
 

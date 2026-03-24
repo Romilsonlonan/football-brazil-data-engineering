@@ -15,6 +15,7 @@ import logging
 
 from airflow import DAG
 from airflow.decorators import task
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 # Configuração padrão da DAG
@@ -78,34 +79,51 @@ with DAG(
         task_id="verify_superset_data"
     )
     def verify_superset_data(result: dict) -> dict:
-        """Verifica se os dados foram corretamente inseridos no PostgreSQL."""
-        import sys
-        import os
-        from sqlalchemy import create_engine, text
+        """Verifica se os dados foram corretamente inseridos no PostgreSQL.
+        
+        Usa PostgresHook do Airflow para:
+        - Gerenciamento seguro de conexões (sem senhas no código)
+        - Método get_pandas_df para consultas integradas com Pandas
+        
+        Args:
+            result: Resultado da tarefa anterior (run_gold_carga)
+            postgres_conn_id: ID da conexão do Airflow (padrão: 'postgres_default')
+        
+        Returns:
+            dict com total de registros verificados e status
+        """
+        from airflow.models import Variable
         
         logger = logging.getLogger(__name__)
         
-        # Conexão com PostgreSQL
-        project_root = os.environ.get('AIRFLOW_PROJECT_ROOT', '/opt/airflow')
-        postgres_conn = os.environ.get(
-            "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN",
-            "postgresql+psycopg2://airflow:airflow123@postgres/airflow"
+        # Obtém o ID da conexão via variável do Airflow ou usa o padrão
+        postgres_conn_id = Variable.get("GOLD_POSTGRES_CONN_ID", default_var='postgres_default')
+        
+        # ============================================
+        # USANDO POSTGRESHOOK (Boas práticas Airflow)
+        # ============================================
+        # O hook busca a conexão configurada na UI do Airflow
+        # Segura a senha automaticamente (não exposta no código)
+        hook = PostgresHook(postgres_conn_id=postgres_conn_id)
+        
+        # Usando get_pandas_df - mais limpo e integrado
+        # O Hook executa a query e já retorna um DataFrame
+        df_count = hook.get_pandas_df("SELECT COUNT(*) as total FROM gold_classificacao")
+        count = df_count.iloc[0]['total']
+        
+        logger.info(f"✅ Total de registros na tabela gold_classificacao: {count}")
+        
+        # Verificando posições dos times (exemplo de query customizada)
+        df_positions = hook.get_pandas_df(
+            "SELECT posicao, time, pontos FROM gold_classificacao ORDER BY posicao LIMIT 5"
         )
         
-        engine = create_engine(postgres_conn)
-        
-        # Verificar dados
-        with engine.connect() as conn:
-            result_query = conn.execute(text("SELECT COUNT(*) FROM gold_classificacao"))
-            count = result_query.fetchone()[0]
-            
-            logger.info(f"✅ Total de registros na tabela: {count}")
-            
-            # Verificar posições
-            positions = conn.execute(text("SELECT posicao, time, pontos FROM gold_classificacao ORDER BY posicao LIMIT 5"))
+        logger.info("📊 Top 5 times na classificação:")
+        for _, row in df_positions.iterrows():
+            logger.info(f"   {row['posicao']}º - {row['time']}: {row['pontos']} pontos")
         
         return {
-            "rows_verified": count,
+            "rows_verified": int(count),
             "status": "VERIFIED"
         }
     
