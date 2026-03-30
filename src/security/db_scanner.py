@@ -134,7 +134,7 @@ class DatabaseScanner:
             )
         
         logger.info("=" * 60)
-        logger.info(f"🔍 ESCANEANDO BANCO DE DADOS")
+        logger.info("🔍 ESCANEANDO BANCO DE DADOS")
         logger.info(f"   Connection: {self._mask_connection(connection_string)}")
         logger.info("=" * 60)
         

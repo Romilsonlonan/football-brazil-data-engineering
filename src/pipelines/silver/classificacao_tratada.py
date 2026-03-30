@@ -1,12 +1,14 @@
 """Pipeline Silver - Classificação."""
 
 import pandas as pd
-from pathlib import Path
 import re
 import logging
 from rich.console import Console
 from rich.table import Table
 from rich.theme import Theme
+
+from src.configs import settings
+from src.security.data_scanner import DataSecurityScanner
 
 # Configurar logger padrão
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,9 +22,6 @@ custom_theme = Theme({
     "success": "bold green",
 })
 console = Console(theme=custom_theme)
-
-from src.configs import settings
-from src.security.data_scanner import DataSecurityScanner
 
 
 def run():
@@ -181,20 +180,8 @@ def run():
     
     # Adicionar linhas
     for _, row in df_clean.iterrows():
-        # Colorir posição baseada no ranking
-        if row['Posição'] <= 4:
-            pos_style = "bold green"  # Libertadores
-        elif row['Posição'] <= 6:
-            pos_style = "bold cyan"   # Pré-libertadores
-        elif row['Posição'] <= 12:
-            pos_style = "bold yellow" # Sul-americana
-        elif row['Posição'] >= 17:
-            pos_style = "bold red"    # Rebaixados
-        else:
-            pos_style = "white"
-        
         table.add_row(
-            f"[{pos_style}]{row['Posição']}[/{pos_style}]",
+            f"{row['Posição']}",
             row['Time'][:20],
             str(row['Jogos']),
             str(row['Vitorias']),
@@ -279,7 +266,6 @@ def clean_classificacao(df: pd.DataFrame) -> pd.DataFrame:
     for col in numeric_columns:
         # Contar valores antes (como string para capturar todos os casos)
         str_col_original = df_clean[col].astype(str)
-        null_before = str_col_original.isnull().sum()
         empty_before = (str_col_original == '').sum()
         nan_before = str_col_original.str.lower().eq('nan').sum()
         none_before = str_col_original.str.lower().eq('none').sum()
@@ -301,9 +287,6 @@ def clean_classificacao(df: pd.DataFrame) -> pd.DataFrame:
         
         # Converter para numérico (int64 para evitar overflow)
         df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce').fillna(0).astype('int64')
-        
-        # Contar valores depois
-        null_after = df_clean[col].isnull().sum()
         
         if total_issues_before > 0:
             logger.info(f"   Coluna '{col}': {total_issues_before} valores substituídos por 0")

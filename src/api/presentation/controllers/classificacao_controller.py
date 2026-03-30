@@ -3,7 +3,6 @@
 from typing import Dict, List, Optional
 
 from src.api.domain.entities.classificacao import Classificacao
-from src.api.domain.entities.vagas import VagasConfig
 from src.api.infrastructure.repositories.parquet_repository import ParquetClassificacaoRepository
 
 

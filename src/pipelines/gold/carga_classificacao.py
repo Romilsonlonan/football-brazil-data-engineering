@@ -12,12 +12,15 @@ Fluxo:
 Tags: gold, carga, postgresql, superset, classificacao
 """
 
-import os
 import logging
-from pathlib import Path
 
 import pandas as pd
 from sqlalchemy import create_engine, text
+
+from src.configs import settings
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
 
 # Configurar logging
 logging.basicConfig(
@@ -25,8 +28,45 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+console = Console()
 
-from src.configs import settings
+
+def exibir_classificacao_rich(df: pd.DataFrame):
+    """Exibe a tabela de classificação formatada com Rich."""
+    # Ordenar por posição
+    df_sorted = df.sort_values('posicao').reset_index(drop=True)
+    
+    # Criar tabela Rich
+    table = Table(title="🏆 CLASSIFICAÇÃO BRASILEIRÃO", show_header=True, header_style="bold magenta")
+    
+    # Adicionar colunas
+    table.add_column("Posição", justify="center", style="cyan")
+    table.add_column("Time", style="green")
+    table.add_column("Pontos", justify="center", style="yellow")
+    table.add_column("Jogos", justify="center")
+    table.add_column("Vitórias", justify="center", style="green")
+    table.add_column("Empates", justify="center", style="yellow")
+    table.add_column("Derrotas", justify="center", style="red")
+    table.add_column("Gols Pro", justify="center")
+    table.add_column("Gols Contra", justify="center")
+    table.add_column("Saldo", justify="center")
+    
+    # Adicionar linhas
+    for _, row in df_sorted.iterrows():
+        table.add_row(
+            str(row.get('posicao', 0)),
+            row.get('time', 'N/A'),
+            str(row.get('pontos', 0)),
+            str(row.get('jogos', 0)),
+            str(row.get('vitorias', 0)),
+            str(row.get('empates', 0)),
+            str(row.get('derrotas', 0)),
+            str(row.get('gols_pro', 0)),
+            str(row.get('gols_contra', 0)),
+            str(row.get('saldo_gols', 0)),
+        )
+    
+    console.print(table)
 
 
 def run():
@@ -52,6 +92,9 @@ def run():
     
     logger.info(f"Arquivo lido: {len(df)} registros, {len(df.columns)} colunas")
     logger.info(f"Colunas: {df.columns.tolist()}")
+    
+    # Exibir classificação formatada com Rich
+    exibir_classificacao_rich(df)
     
     # ============================================
     # ETAPA 1: Salvar arquivo Parquet na Gold
@@ -142,7 +185,7 @@ def run():
     logger.info("=" * 60)
     logger.info("✅ PIPELINE GOLD - CARGA CONCLUÍDA!")
     logger.info(f"   Registros: {len(df)}")
-    logger.info(f"   Tabela: public.gold_classificacao")
+    logger.info("   Tabela: public.gold_classificacao")
     logger.info("=" * 60)
     logger.info("")
     logger.info("💡 DICA: Para atualizar o Superset:")

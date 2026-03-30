@@ -20,7 +20,7 @@ Usage:
     result = scanner.scan_dataframe(df, "minha_tabela")
 """
 
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 from dataclasses import dataclass, field
 from datetime import datetime
 

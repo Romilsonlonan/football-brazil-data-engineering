@@ -120,6 +120,17 @@ class SecretPatternsScanner:
     IGNORE_FILES = [
         "docker-compose.yaml",
         ".env",
+        ".env.example",
+        "scripts/pre-commit-check.py",  # evitar detectar seus próprios padrões
+    ]
+    
+    # Pastas a ignorar
+    IGNORE_DIRS = [
+        "agents/",
+        "data/",
+        "__pycache__",
+        "tests/",
+        ".git/",
     ]
     
     # Padrões de dados sensíveis
@@ -192,10 +203,16 @@ class SecretPatternsScanner:
     def scan_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Escaneia um arquivo em busca de padrões sensíveis."""
         findings = []
+        file_str = str(file_path)
         
         # Ignora arquivos específicos
-        if str(file_path) in self.IGNORE_FILES:
+        if file_str in self.IGNORE_FILES:
             return findings
+            
+        # Ignora diretórios
+        for ignore_dir in self.IGNORE_DIRS:
+            if ignore_dir in file_str:
+                return findings
         
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -233,12 +250,16 @@ class CredentialsScanner:
     
     # Arquivos e pastas a ignorar (falsos positivos conhecidos)
     IGNORE_PATTERNS = [
-        "src/security/",  #scanner de credenciais detecta seus próprios padrões
-        "src/api/infrastructure/database/connection.py",  #usa variáveis de ambiente
-        "src/pipelines/gold/carga_classificacao.py", #usa configurações do settings
-        "k8s/",  #templates K8s usam placeholders
-        "docker-compose.yaml",  #usa variáveis de ambiente com placeholders
-        ".env.example",  #arquivo de exemplo com placeholders
+        "src/security/",  # scanner de credenciais detecta seus próprios padrões
+        "src/api/infrastructure/database/connection.py",  # usa variáveis de ambiente
+        "src/pipelines/gold/carga_classificacao.py", # usa configurações do settings
+        "k8s/",  # templates K8s usam placeholders
+        "docker-compose.yaml",  # usa variáveis de ambiente com placeholders
+        ".env.example",  # arquivo de exemplo com placeholders
+        "agents/",  # documentação e logs de agentes podem conter dados de exemplo
+        "data/",  # arquivos de dados (parquet, db) não devem ser escaneados por segredos de código
+        "__pycache__",  # arquivos compilados
+        "tests/",  # arquivos de teste podem conter dados fictícios
     ]
     
     def __init__(self, logger: SecurityLogger):

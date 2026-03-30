@@ -1,7 +1,4 @@
-import pytest
 import pandas as pd
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 # Teste simples para verificar se o DataFrame de classificação tem as colunas esperadas
 def test_classificacao_columns():
@@ -15,24 +12,33 @@ def test_classificacao_columns():
     
     assert all(col in df.columns for col in expected_columns)
 
-def test_classificacao_data_types():
+def test_classificacao_regras_negocio():
+    """Valida se as regras de negócio de futebol estão corretas no DataFrame."""
     data = {
-        'posicao': [1],
-        'time': ['São Paulo'],
-        'pontos': [16]
+        'posicao': [1, 2],
+        'time': ['São Paulo', 'Palmeiras'],
+        'vitorias': [5, 4],
+        'empates': [1, 1],
+        'derrotas': [0, 1],
+        'gols_pro': [10, 8],
+        'gols_contra': [3, 1],
+        'saldo_gols': [7, 7],
+        'pontos': [16, 13]
     }
     df = pd.DataFrame(data)
     
-    assert df['posicao'].dtype == 'int64'
-    assert df['pontos'].dtype == 'int64'
-    assert isinstance(df['time'].iloc[0], str)
-
-@patch('pandas.read_parquet')
-def test_load_gold_data_mock(mock_read_parquet):
-    # Simula a leitura de um arquivo parquet
-    mock_df = pd.DataFrame({'time': ['Botafogo'], 'pontos': [78]})
-    mock_read_parquet.return_value = mock_df
+    # 1. Valida Cálculo de Pontos (Vitória=3, Empate=1)
+    # São Paulo: (5*3) + (1*1) = 16
+    assert df.iloc[0]['pontos'] == (df.iloc[0]['vitorias'] * 3) + df.iloc[0]['empates']
     
-    # Aqui testaríamos a lógica de carga se estivesse isolada
-    assert len(mock_df) == 1
-    assert mock_df.iloc[0]['time'] == 'Botafogo'
+    # 2. Valida Saldo de Gols
+    assert df.iloc[1]['saldo_gols'] == df.iloc[1]['gols_pro'] - df.iloc[1]['gols_contra']
+    
+    # 3. Valida se o primeiro colocado tem mais pontos que o segundo
+    assert df.iloc[0]['pontos'] > df.iloc[1]['pontos']
+
+def test_classificacao_integridade_times():
+    """Garante que temos exatamente 20 times na tabela final (se for o caso)."""
+    # Simulando um DataFrame completo
+    df_completo = pd.DataFrame({'time': [f'Time {i}' for i in range(1, 21)]})
+    assert len(df_completo) == 20

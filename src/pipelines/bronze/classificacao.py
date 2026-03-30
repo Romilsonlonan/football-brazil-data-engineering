@@ -1,7 +1,6 @@
 """Pipeline Bronze - Classificacao."""
 
 from pathlib import Path
-from datetime import datetime
 
 import pandas as pd
 

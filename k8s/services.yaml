@@ -93,11 +93,11 @@ metadata:
   namespace: lakehouse
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: standard
+  storageClassName: local-path
 ---
 # PersistentVolumeClaim - Airflow Logs
 apiVersion: v1
@@ -107,11 +107,11 @@ metadata:
   namespace: lakehouse
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
-  storageClassName: standard
+  storageClassName: local-path
 ---
 # PersistentVolumeClaim - Lakehouse Data
 apiVersion: v1
@@ -121,11 +121,11 @@ metadata:
   namespace: lakehouse
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-  storageClassName: standard
+  storageClassName: local-path
 ---
 # PersistentVolumeClaim - PostgreSQL
 apiVersion: v1
@@ -139,4 +139,4 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: standard
+  storageClassName: local-path

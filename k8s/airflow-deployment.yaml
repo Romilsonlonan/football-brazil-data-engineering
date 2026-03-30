@@ -27,8 +27,8 @@ spec:
         component: webserver
     spec:
       serviceAccountName: airflow
+      # Removido runAsUser: 1000 para evitar erro de UID não encontrado no /etc/passwd
       securityContext:
-        runAsUser: 1000
         fsGroup: 1000
       containers:
         - name: webserver

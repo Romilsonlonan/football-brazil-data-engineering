@@ -1,7 +1,7 @@
 """Entidade para gerenciar vagas nas competições."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING
 
 from ..value_objects.posicao import TipoVaga
 
@@ -90,7 +90,7 @@ class VagasConfig:
     def get_zona_por_posicao(self, posicao: int) -> str:
         """Retorna a zona (G4, G5, G6... Sul-Americana, Rebaixamento)."""
         if posicao <= 4:
-            return f"G4 (Libertadores)"
+            return "G4 (Libertadores)"
         elif posicao == 5 and self.campeao_copa_brasil is None:
             return "G5 (Pré-Libertadores)"
         elif posicao <= self.zona_liberadores_fim:

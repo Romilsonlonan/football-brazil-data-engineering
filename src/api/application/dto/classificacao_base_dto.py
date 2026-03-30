@@ -1,4 +1,12 @@
-"""DTO para Classificação."""
+"""DTO Base para Classificação.
+
+Este DTO contém apenas os campos básicos de classificação (stats).
+Used por pipelines que não precisam de informações de vagas/zonas.
+
+Campos:
+    - posicao, time, jogos, vitorias, empates, defeats
+    - gp, gc, sg, pontos, aproveitamento
+"""
 
 from dataclasses import dataclass
 from typing import Optional
@@ -7,8 +15,8 @@ from src.api.domain.entities.classificacao import Classificacao
 
 
 @dataclass
-class ClassificacaoDTO:
-    """Data Transfer Object para classificação."""
+class ClassificacaoBaseDTO:
+    """Data Transfer Object para classificação básica."""
     
     posicao: int
     time: str
@@ -16,19 +24,16 @@ class ClassificacaoDTO:
     jogos: int
     vitorias: int
     empates: int
-    derrotas: int
+    defeats: int
     gp: int
     gc: int
     sg: int
     pontos: int
     aproveitamento: float
-    status: str
-    zona: Optional[str] = None
-    status_curto: Optional[str] = None
     temporada: Optional[str] = None
     
     @classmethod
-    def from_entity(cls, entity: Classificacao) -> "ClassificacaoDTO":
+    def from_entity(cls, entity: Classificacao) -> "ClassificacaoBaseDTO":
         """Cria um DTO a partir de uma entidade."""
         return cls(
             posicao=entity.posicao,
@@ -37,15 +42,12 @@ class ClassificacaoDTO:
             jogos=entity.jogos,
             vitorias=entity.vitorias,
             empates=entity.empates,
-            derrotas=entity.derrotas,
+            defeats=entity.derrotas,
             gp=entity.gp,
             gc=entity.gc,
             sg=entity.sg,
             pontos=entity.pontos,
             aproveitamento=entity.aproveitamento,
-            status=entity.zona if entity.zona else entity.status,
-            zona=entity.zona_computada,
-            status_curto=entity.status_curto,
             temporada=entity.temporada
         )
     
@@ -64,14 +66,11 @@ class ClassificacaoDTO:
             "sg": self.sg,
             "pontos": self.pontos,
             "aproveitamento": self.aproveitamento,
-            "status": self.status,
-            "zona": self.zona,
-            "status_curto": self.status_curto,
             "temporada": self.temporada
         }
     
     @classmethod
-    def from_dict(cls, data: dict) -> "ClassificacaoDTO":
+    def from_dict(cls, data: dict) -> "ClassificacaoBaseDTO":
         """Cria um DTO a partir de um dicionário."""
         return cls(
             posicao=data.get("posicao", data.get("Posição", 0)),
@@ -80,14 +79,11 @@ class ClassificacaoDTO:
             jogos=data.get("jogos", data.get("J", 0)),
             vitorias=data.get("vitorias", data.get("V", 0)),
             empates=data.get("empates", data.get("E", 0)),
-           derrotas=data.get("derrotas", data.get("D", 0)),
+            defeats=data.get("derrotas", data.get("D", 0)),
             gp=data.get("gp", data.get("GP", 0)),
             gc=data.get("gc", data.get("GC", 0)),
             sg=data.get("sg", data.get("SG", 0)),
             pontos=data.get("pontos", data.get("PTS", 0)),
             aproveitamento=data.get("aproveitamento", 0.0),
-            status=data.get("status", data.get("zona", "SEM_REBAIXAMENTO")),
-            zona=data.get("zona", None),
-            status_curto=data.get("status_curto", None),
             temporada=data.get("temporada")
         )

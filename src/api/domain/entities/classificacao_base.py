@@ -1,30 +1,29 @@
-"""Entidade Classificacao."""
+"""Entidade Classificacao Base.
+
+Esta entidade contém apenas os campos básicos de classificação (stats).
+Usada por pipelines que não precisam de informações de vagas/zonas.
+"""
 
 from dataclasses import dataclass
 from typing import Optional
 
 from .time import Time
-from .vagas import VagasConfig
 
 
 @dataclass
-class Classificacao:
-    """Entidade que representa a classificação de um time no Brasileirão."""
+class ClassificacaoBase:
+    """Entidade que representa a classificação básica de um time no Brasileirão."""
     
     posicao: int
     time: Time
     jogos: int = 0
     vitorias: int = 0
     empates: int = 0
-    derrotas: int = 0
+    defeats: int = 0
     gp: int = 0  # Gols Pró
     gc: int = 0  # Gols Contra
     sg: int = 0  # Saldo de Gols
     pontos: int = 0
-    
-    # Campos de vagas/zona (novos)
-    zona_computada: Optional[str] = None  # Zona calculada automaticamente
-    status_curto: Optional[str] = None  # Status curto (ex: "LIB", "SUL-AM")
     
     # Campos opcionais de metadata
     id: Optional[int] = None
@@ -53,27 +52,20 @@ class Classificacao:
             return 0.0
         return round((self.pontos / (self.jogos * 3)) * 100, 2)
     
-    def get_status(self, vagas_config: Optional[VagasConfig] = None) -> str:
-        """Retorna o status do time na competição."""
-        if vagas_config:
-            return vagas_config.get_zona_por_posicao(self.posicao)
-        
-        # Fallback para lógica simples
+    def get_status(self) -> str:
+        """Retorna o status simples do time na competição."""
         if self.posicao <= 4:
-            return "LIBRERTADORES (G4)"
+            return "LIBERTADORES (G4)"
         elif self.posicao == 5:
             return "PRÉ-LIBERTADORES (G5)"
         elif self.posicao <= 6:
+            return "LIBERTADORES (G6)"
+        elif self.posicao <= 12:
             return "SUL-AMERICANA"
         elif self.posicao >= 17:
             return "REBAIXAMENTO"
         else:
             return "SEM_REBAIXAMENTO"
-    
-    @property
-    def zona(self) -> str:
-        """Retorna a zona do time (propriedade de conveniência)."""
-        return self.get_status()
     
     def __str__(self) -> str:
         return f"{self.posicao}º - {self.time.nome_reduzido} ({self.pontos} pts)"

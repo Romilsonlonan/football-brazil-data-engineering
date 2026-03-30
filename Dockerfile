@@ -42,10 +42,7 @@ RUN pip install --no-cache-dir --break-system-packages \
     pydantic-settings \
     beautifulsoup4 \
     pyarrow \
-    presidio-analyzer \
-    presidio-anonymizer \
-    spacy \
-    piicatcher
+    prometheus-client
 
 # Copia código fonte
 COPY --chown=appuser:appgroup src/ ./src/

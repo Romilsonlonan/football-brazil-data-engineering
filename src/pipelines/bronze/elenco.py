@@ -1,7 +1,6 @@
 """Pipeline Bronze - Elenco."""
 
 from pathlib import Path
-from typing import Optional
 import time
 import re
 
@@ -85,9 +84,7 @@ class ElencoBronzePipeline(BasePipeline):
         """Extrai dados da fonte (scraper ESPN)."""
         from bs4 import BeautifulSoup
         from rich.console import Console
-        from rich.table import Table
         from rich.panel import Panel
-        from rich import box
         
         console = Console(force_terminal=True)
         
@@ -149,7 +146,6 @@ class ElencoBronzePipeline(BasePipeline):
     
     def _parse_goalkeeper_table(self, table, time: str) -> list:
         """Parse tabela de goleiros."""
-        from bs4 import BeautifulSoup
         
         players = []
         rows = table.select("tbody tr")
@@ -211,7 +207,6 @@ class ElencoBronzePipeline(BasePipeline):
     
     def _parse_field_player_table(self, table, time: str) -> list:
         """Parse tabela de jogadores de campo."""
-        from bs4 import BeautifulSoup
         
         players = []
         rows = table.select("tbody tr")

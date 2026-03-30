@@ -1,4 +1,4 @@
-"""Repositório para ler dados do arquivo Parquet (silver-classificacao-tratado)."""
+"""Repositório para ler dados do arquivo Parquet (gold-classificacao)."""
 
 import pandas as pd
 from pathlib import Path
@@ -13,7 +13,7 @@ from src.api.domain.repositories.interface import IClassificacaoRepository
 
 
 class ParquetClassificacaoRepository(IClassificacaoRepository):
-    """Repositório que lê dados do arquivo Parquet tratado."""
+    """Repositório que lê dados do arquivo Parquet Gold."""
     
     def __init__(self, parquet_path: Optional[Path] = None):
         """
@@ -24,10 +24,10 @@ class ParquetClassificacaoRepository(IClassificacaoRepository):
                           Se None, usa o caminho padrão.
         """
         if parquet_path is None:
-            # Caminho padrão para o arquivo silver tratado
+            # Caminho padrão para o arquivo gold com vagas
             # Usa variável de ambiente DATA_PATH ou padrão /app/data
             data_path = os.environ.get("DATA_PATH", "/app/data")
-            parquet_path = Path(f"{data_path}/silver/classificacao-limpa.parquet")
+            parquet_path = Path(f"{data_path}/gold/classificacao-vagas.parquet")
         
         self._parquet_path = parquet_path
         self._df: Optional[pd.DataFrame] = None
@@ -60,10 +60,12 @@ class ParquetClassificacaoRepository(IClassificacaoRepository):
             vitorias=int(row.get("Vitorias", row.get("vitorias", 0))),
             empates=int(row.get("Empates", row.get("empates", 0))),
             derrotas=int(row.get("Derrotas", row.get("derrotas", 0))),
-            gp=int(row.get("GolsPro", row.get("gp", 0))),
-            gc=int(row.get("GolsContra", row.get("gc", 0))),
-            sg=int(row.get("SaldoGols", row.get("sg", 0))),
+            gp=int(row.get("GolsPro", row.get("gols_pro", row.get("gp", 0)))),
+            gc=int(row.get("GolsContra", row.get("gols_contra", row.get("gc", 0)))),
+            sg=int(row.get("SaldoGols", row.get("saldo_gols", row.get("sg", 0)))),
             pontos=int(row.get("Pontos", row.get("pontos", 0))),
+            zona_computada=row.get("zona", None),
+            status_curto=row.get("status_curto", None),
             temporada=temporada
         )
         
