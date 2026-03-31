@@ -26,7 +26,7 @@ from src.api.application.dto.classificacao_dto import ClassificacaoDTO
 
 class ListarClassificacaoVagasUseCase:
     """Use case para listar a classificação do Brasileirão com vagas.
-    
+
     Este use case utiliza os dados do arquivo parquet com vagas que contém:
     - Classificação básica (posicao, time, jogos, vitorias, empates, derrotas, gp, gc, sg, pontos)
     - Colunas de vagas: zona, status_curto, aproveitamento
@@ -38,7 +38,7 @@ class ListarClassificacaoVagasUseCase:
 
     def set_repository(self, repository):
         """Define o repositório a ser usado.
-        
+
         Args:
             repository: Instância do repositório ParquetClassificacaoRepository
         """
@@ -50,6 +50,7 @@ class ListarClassificacaoVagasUseCase:
             from src.api.infrastructure.repositories.parquet_repository import (
                 ParquetClassificacaoRepository,
             )
+
             self._repository = ParquetClassificacaoRepository()
 
     def execute(self, temporada: Optional[str] = None) -> List[Classificacao]:
@@ -126,9 +127,7 @@ class ListarClassificacaoVagasUseCase:
         self._ensure_repository()
         return self._repository.get_by_time(nome_time, temporada)
 
-    def get_libertadores(
-        self, temporada: Optional[str] = None
-    ) -> List[Classificacao]:
+    def get_libertadores(self, temporada: Optional[str] = None) -> List[Classificacao]:
         """
         Retorna times classificados para a Copa Libertadores.
 
@@ -156,32 +155,31 @@ class ListarClassificacaoVagasUseCase:
         entities = self.get_libertadores(temporada)
         return [ClassificacaoDTO.from_entity(e) for e in entities]
 
-    def get_sul_americana(
-        self, temporada: Optional[str] = None
-    ) -> List[Classificacao]:
+    def get_sul_americana(self, temporada: Optional[str] = None) -> List[Classificacao]:
         """
-        Retorna times classificados para a Copa Sul-Americana.
-        
-       Nota: O arquivo classificacao-vagas.parquet não tem método específico para 
-        Sul-Americana, então filtra times que não são Libertadores nem rebaixados.
+         Retorna times classificados para a Copa Sul-Americana.
 
-        Args:
-            temporada: Ano da temporada
+        Nota: O arquivo classificacao-vagas.parquet não tem método específico para
+         Sul-Americana, então filtra times que não são Libertadores nem rebaixados.
 
-        Returns:
-            Lista de times classificados para Sul-Americana
+         Args:
+             temporada: Ano da temporada
+
+         Returns:
+             Lista de times classificados para Sul-Americana
         """
         self._ensure_repository()
-        
+
         # Busca todos os times
         todos = self._repository.get_all(temporada)
-        
+
         # Filtra times na zona de Sul-Americana
         sulamericana = [
-            t for t in todos 
+            t
+            for t in todos
             if t.zona_computada and "SUL-AMERICANA" in t.zona_computada.upper()
         ]
-        
+
         return sulamericana
 
     def get_sul_americana_as_dto(
@@ -199,9 +197,7 @@ class ListarClassificacaoVagasUseCase:
         entities = self.get_sul_americana(temporada)
         return [ClassificacaoDTO.from_entity(e) for e in entities]
 
-    def get_rebaixados(
-        self, temporada: Optional[str] = None
-    ) -> List[Classificacao]:
+    def get_rebaixados(self, temporada: Optional[str] = None) -> List[Classificacao]:
         """
         Retorna times na zona de rebaixamento.
 
@@ -240,14 +236,15 @@ class ListarClassificacaoVagasUseCase:
             Dicionário com resumo da temporada
         """
         self._ensure_repository()
-        
+
         classificacao = self._repository.get_all(temporada)
         libertadores = self._repository.get_times_liberadores(temporada)
         rebaixados = self._repository.get_times_rebaixados(temporada)
-        
+
         # Sul-Americana: times que não são Libertadores nem rebaixados
         sul_americana = [
-            t for t in classificacao 
+            t
+            for t in classificacao
             if t.zona_computada and "SUL-AMERICANA" in t.zona_computada.upper()
         ]
 
@@ -256,15 +253,15 @@ class ListarClassificacaoVagasUseCase:
             "total_times": len(classificacao),
             "libertadores": {
                 "quantidade": len(libertadores),
-                "times": [t.time.nome for t in libertadores]
+                "times": [t.time.nome for t in libertadores],
             },
             "sul_americana": {
                 "quantidade": len(sul_americana),
-                "times": [t.time.nome for t in sul_americana]
+                "times": [t.time.nome for t in sul_americana],
             },
             "rebaixados": {
                 "quantidade": len(rebaixados),
-                "times": [t.time.nome for t in rebaixados]
+                "times": [t.time.nome for t in rebaixados],
             },
             "classificacao_completa": [
                 {
@@ -272,8 +269,8 @@ class ListarClassificacaoVagasUseCase:
                     "time": c.time.nome,
                     "pontos": c.pontos,
                     "zona": c.zona_computada,
-                    "status": c.status_curto
+                    "status": c.status_curto,
                 }
                 for c in classificacao
-            ]
+            ],
         }

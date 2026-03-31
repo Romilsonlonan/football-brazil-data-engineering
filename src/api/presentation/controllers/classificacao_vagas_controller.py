@@ -15,7 +15,7 @@ from src.api.application.use_cases.listar_classificacao_vagas import (
 
 class ClassificacaoVagasController:
     """Controller para operações de classificação com vagas.
-    
+
     Este controller gerencia endpoints relacionados à classificação do Campeonato
     Brasileiro com informações de vagas para competições internacionais:
     - Copa Libertadores (G4, G5, G6)
@@ -28,9 +28,7 @@ class ClassificacaoVagasController:
         self._use_case = ListarClassificacaoVagasUseCase()
 
     def listar_classificacao_completa(
-        self,
-        temporada: str = "2026",
-        usar_dto: bool = False
+        self, temporada: str = "2026", usar_dto: bool = False
     ) -> Dict:
         """
         Lista a classificação completa com vagas.
@@ -55,19 +53,14 @@ class ClassificacaoVagasController:
                 "data": {
                     "temporada": temporada,
                     "classificacao": data,
-                    "total_times": len(data)
-                }
+                    "total_times": len(data),
+                },
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def listar_libertadores(
-        self,
-        temporada: str = "2026",
-        usar_dto: bool = False
+        self, temporada: str = "2026", usar_dto: bool = False
     ) -> Dict:
         """
         Lista times classificados para a Copa Libertadores.
@@ -93,19 +86,14 @@ class ClassificacaoVagasController:
                     "temporada": temporada,
                     "zona": "LIBERTADORES",
                     "quantidade": len(data),
-                    "times": data
-                }
+                    "times": data,
+                },
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def listar_sul_americana(
-        self,
-        temporada: str = "2026",
-        usar_dto: bool = False
+        self, temporada: str = "2026", usar_dto: bool = False
     ) -> Dict:
         """
         Lista times classificados para a Copa Sul-Americana.
@@ -131,19 +119,14 @@ class ClassificacaoVagasController:
                     "temporada": temporada,
                     "zona": "SUL-AMERICANA",
                     "quantidade": len(data),
-                    "times": data
-                }
+                    "times": data,
+                },
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def listar_rebaixados(
-        self,
-        temporada: str = "2026",
-        usar_dto: bool = False
+        self, temporada: str = "2026", usar_dto: bool = False
     ) -> Dict:
         """
         Lista times na zona de rebaixamento.
@@ -169,20 +152,13 @@ class ClassificacaoVagasController:
                     "temporada": temporada,
                     "zona": "REBAIXAMENTO",
                     "quantidade": len(data),
-                    "times": data
-                }
+                    "times": data,
+                },
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def buscar_por_posicao(
-        self,
-        posicao: int,
-        temporada: str = "2026"
-    ) -> Dict:
+    def buscar_por_posicao(self, posicao: int, temporada: str = "2026") -> Dict:
         """
         Busca a classificação de uma posição específica.
 
@@ -195,34 +171,18 @@ class ClassificacaoVagasController:
         """
         try:
             if posicao < 1 or posicao > 20:
-                return {
-                    "success": False,
-                    "error": "Posição deve estar entre 1 e 20"
-                }
+                return {"success": False, "error": "Posição deve estar entre 1 e 20"}
 
             classificacao = self._use_case.get_by_posicao(posicao, temporada)
 
             if not classificacao:
-                return {
-                    "success": False,
-                    "error": f"Posição {posicao} não encontrada"
-                }
+                return {"success": False, "error": f"Posição {posicao} não encontrada"}
 
-            return {
-                "success": True,
-                "data": self._to_dict(classificacao)
-            }
+            return {"success": True, "data": self._to_dict(classificacao)}
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def buscar_por_time(
-        self,
-        nome_time: str,
-        temporada: str = "2026"
-    ) -> Dict:
+    def buscar_por_time(self, nome_time: str, temporada: str = "2026") -> Dict:
         """
         Busca a classificação de um time específico.
 
@@ -237,20 +197,11 @@ class ClassificacaoVagasController:
             classificacao = self._use_case.get_by_time(nome_time, temporada)
 
             if not classificacao:
-                return {
-                    "success": False,
-                    "error": f"Time '{nome_time}' não encontrado"
-                }
+                return {"success": False, "error": f"Time '{nome_time}' não encontrado"}
 
-            return {
-                "success": True,
-                "data": self._to_dict(classificacao)
-            }
+            return {"success": True, "data": self._to_dict(classificacao)}
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def get_resumo_temporada(self, temporada: str = "2026") -> Dict:
         """
@@ -265,15 +216,9 @@ class ClassificacaoVagasController:
         try:
             resumo = self._use_case.get_resumo_temporada(temporada)
 
-            return {
-                "success": True,
-                "data": resumo
-            }
+            return {"success": True, "data": resumo}
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def _to_dict(self, classificacao) -> dict:
         """Converte entidade para dicionário."""
@@ -291,5 +236,5 @@ class ClassificacaoVagasController:
             "pontos": classificacao.pontos,
             "aproveitamento": classificacao.aproveitamento,
             "zona": classificacao.zona_computada or "",
-            "status": classificacao.status_curto or ""
+            "status": classificacao.status_curto or "",
         }

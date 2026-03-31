@@ -17,7 +17,7 @@ from src.api.domain.entities.classificacao import Classificacao
 @dataclass
 class ClassificacaoVagasDTO:
     """Data Transfer Object para classificação com vagas."""
-    
+
     posicao: int
     time: str
     time_reduzido: str
@@ -33,7 +33,7 @@ class ClassificacaoVagasDTO:
     zona: str
     status_curto: str
     temporada: Optional[str] = None
-    
+
     @classmethod
     def from_entity(cls, entity: Classificacao) -> "ClassificacaoVagasDTO":
         """Cria um DTO a partir de uma entidade."""
@@ -52,9 +52,9 @@ class ClassificacaoVagasDTO:
             aproveitamento=entity.aproveitamento,
             zona=entity.zona_computada or entity.zona or "",
             status_curto=entity.status_curto or "",
-            temporada=entity.temporada
+            temporada=entity.temporada,
         )
-    
+
     def to_dict(self) -> dict:
         """Converte o DTO para dicionário."""
         return {
@@ -72,9 +72,9 @@ class ClassificacaoVagasDTO:
             "aproveitamento": self.aproveitamento,
             "zona": self.zona,
             "status_curto": self.status_curto,
-            "temporada": self.temporada
+            "temporada": self.temporada,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "ClassificacaoVagasDTO":
         """Cria um DTO a partir de um dicionário."""
@@ -93,5 +93,5 @@ class ClassificacaoVagasDTO:
             aproveitamento=data.get("aproveitamento", 0.0),
             zona=data.get("zona", ""),
             status_curto=data.get("status_curto", ""),
-            temporada=data.get("temporada")
+            temporada=data.get("temporada"),
         )

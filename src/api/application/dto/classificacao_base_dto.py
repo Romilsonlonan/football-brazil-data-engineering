@@ -17,7 +17,7 @@ from src.api.domain.entities.classificacao import Classificacao
 @dataclass
 class ClassificacaoBaseDTO:
     """Data Transfer Object para classificação básica."""
-    
+
     posicao: int
     time: str
     time_reduzido: str
@@ -31,7 +31,7 @@ class ClassificacaoBaseDTO:
     pontos: int
     aproveitamento: float
     temporada: Optional[str] = None
-    
+
     @classmethod
     def from_entity(cls, entity: Classificacao) -> "ClassificacaoBaseDTO":
         """Cria um DTO a partir de uma entidade."""
@@ -48,9 +48,9 @@ class ClassificacaoBaseDTO:
             sg=entity.sg,
             pontos=entity.pontos,
             aproveitamento=entity.aproveitamento,
-            temporada=entity.temporada
+            temporada=entity.temporada,
         )
-    
+
     def to_dict(self) -> dict:
         """Converte o DTO para dicionário."""
         return {
@@ -66,9 +66,9 @@ class ClassificacaoBaseDTO:
             "sg": self.sg,
             "pontos": self.pontos,
             "aproveitamento": self.aproveitamento,
-            "temporada": self.temporada
+            "temporada": self.temporada,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "ClassificacaoBaseDTO":
         """Cria um DTO a partir de um dicionário."""
@@ -85,5 +85,5 @@ class ClassificacaoBaseDTO:
             sg=data.get("sg", data.get("SG", 0)),
             pontos=data.get("pontos", data.get("PTS", 0)),
             aproveitamento=data.get("aproveitamento", 0.0),
-            temporada=data.get("temporada")
+            temporada=data.get("temporada"),
         )
