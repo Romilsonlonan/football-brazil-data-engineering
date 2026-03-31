@@ -8,10 +8,10 @@ from src.api.domain.repositories.interface import IClassificacaoRepository
 
 class AtualizarClassificacaoUseCase:
     """Use case para atualizar uma classificação existente."""
-    
+
     def __init__(self, repository: IClassificacaoRepository):
         self._repository = repository
-    
+
     def execute(
         self,
         posicao: int,
@@ -23,11 +23,11 @@ class AtualizarClassificacaoUseCase:
         gc: Optional[int] = None,
         sg: Optional[int] = None,
         pontos: Optional[int] = None,
-        temporada: Optional[str] = None
+        temporada: Optional[str] = None,
     ) -> Classificacao:
         """
         Atualiza uma classificação existente.
-        
+
         Args:
             posicao: Posição na tabela (identificador)
             jogos: Novo número de jogos
@@ -39,16 +39,16 @@ class AtualizarClassificacaoUseCase:
             sg: Novo saldo de gol
             pontos: Novos pontos
             temporada: Ano da temporada
-        
+
         Returns:
             Classificação atualizada
         """
         # Busca a classificação atual
         classificacao_atual = self._repository.get_by_posicao(posicao, temporada)
-        
+
         if not classificacao_atual:
             raise ValueError(f"Classificação não encontrada na posição {posicao}")
-        
+
         # Atualiza os campos fornecidos
         if jogos is not None:
             classificacao_atual.jogos = jogos
@@ -62,19 +62,19 @@ class AtualizarClassificacaoUseCase:
             classificacao_atual.gp = gp
         if gc is not None:
             classificacao_atual.gc = gc
-        
+
         # Recalcula saldo de gol se GP ou GC foram atualizados
         if gp is not None or gc is not None:
             classificacao_atual.sg = classificacao_atual.gp - classificacao_atual.gc
-        
+
         # Recalcula pontos se V, E ou D foram atualizados
         if vitorias is not None or empates is not None or derrotas is not None:
             classificacao_atual.pontos = (
                 classificacao_atual.vitorias * 3
             ) + classificacao_atual.empates
-        
+
         # Atualiza pontos explicitamente se fornecido
         if pontos is not None:
             classificacao_atual.pontos = pontos
-        
+
         return classificacao_atual

@@ -4,13 +4,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 from src.api.domain.entities.classificacao import Classificacao
-from src.api.domain.entities.time import Time
 
 
 @dataclass
 class ClassificacaoDTO:
     """Data Transfer Object para classificação."""
-    
+
     posicao: int
     time: str
     time_reduzido: str
@@ -25,7 +24,7 @@ class ClassificacaoDTO:
     aproveitamento: float
     status: str
     temporada: Optional[str] = None
-    
+
     @classmethod
     def from_entity(cls, entity: Classificacao) -> "ClassificacaoDTO":
         """Cria um DTO a partir de uma entidade."""
@@ -43,9 +42,9 @@ class ClassificacaoDTO:
             pontos=entity.pontos,
             aproveitamento=entity.aproveitamento,
             status=entity.status,
-            temporada=entity.temporada
+            temporada=entity.temporada,
         )
-    
+
     def to_dict(self) -> dict:
         """Converte o DTO para dicionário."""
         return {
@@ -62,9 +61,9 @@ class ClassificacaoDTO:
             "pontos": self.pontos,
             "aproveitamento": self.aproveitamento,
             "status": self.status,
-            "temporada": self.temporada
+            "temporada": self.temporada,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "ClassificacaoDTO":
         """Cria um DTO a partir de um dicionário."""
@@ -75,12 +74,12 @@ class ClassificacaoDTO:
             jogos=data.get("jogos", data.get("J", 0)),
             vitorias=data.get("vitorias", data.get("V", 0)),
             empates=data.get("empates", data.get("E", 0)),
-           derrotas=data.get("derrotas", data.get("D", 0)),
+            derrotas=data.get("derrotas", data.get("D", 0)),
             gp=data.get("gp", data.get("GP", 0)),
             gc=data.get("gc", data.get("GC", 0)),
             sg=data.get("sg", data.get("SG", 0)),
             pontos=data.get("pontos", data.get("PTS", 0)),
             aproveitamento=data.get("aproveitamento", 0.0),
             status=data.get("status", "SEM_REBAIXAMENTO"),
-            temporada=data.get("temporada")
+            temporada=data.get("temporada"),
         )

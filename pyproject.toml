@@ -5,7 +5,7 @@ description = ""
 authors = [
     {name = "Romilson Luis"}
 ]
-requires-python = ">=3.12,<4.0"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "fastapi",
     "update (>=0.0.1,<0.0.2)",
@@ -37,6 +37,7 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
+    "pre-commit (>=3.0.0,<4.0.0)",
     "ruff (>=0.15.6,<0.16.0)",
     "pytest (>=9.0.2,<10.0.0)",
     "pytest-cov (>=7.0.0,<8.0.0)",
