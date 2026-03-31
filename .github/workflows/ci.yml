@@ -25,3 +25,44 @@ jobs:
       - name: Run pre-commit
         run: |
           pre-commit run --all-files || true
+
+  streamlit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Check Streamlit app
+        run: |
+          cd dashboard
+          poetry run python -c "
+            import sys
+            sys.path.insert(0, '..')
+            from application.use_cases.buscar_classificacao import BuscarClassificacaoUseCase
+            from application.use_cases.buscar_elenco import BuscarElencoUseCase
+            from infrastructure.repositories.parquet_repository import ParquetRepository
+            from shared.config import get_data_path, get_bronze_data_path
+            
+            # Teste de carregamento de dados
+            repo_class = ParquetRepository(get_data_path())
+            repo_elenco = ParquetRepository(get_bronze_data_path())
+            
+            use_case_class = BuscarClassificacaoUseCase(repo_class)
+            use_case_elenco = BuscarElencoUseCase(repo_elenco)
+            
+            df_class = use_case_class.execute()
+            df_elenco = use_case_elenco.execute()
+            
+            print(f'✅ Classificação carregada: {len(df_class)} times')
+            print(f'✅ Elenco carregado: {len(df_elenco)} jogadores')
+            print('✅ Todos os testes passaram!')
+          "
