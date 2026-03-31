@@ -20,7 +20,6 @@ from sqlalchemy import create_engine, text
 from src.configs import settings
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
 
 # Configurar logging
 logging.basicConfig(

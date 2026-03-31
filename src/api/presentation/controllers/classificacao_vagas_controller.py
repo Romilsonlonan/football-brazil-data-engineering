@@ -6,12 +6,11 @@ para classificação com vagas em competições internacionais (Libertadores e S
 Usa o Use Case ListarClassificacaoVagasUseCase para manter a arquitetura limpa.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict
 
 from src.api.application.use_cases.listar_classificacao_vagas import (
     ListarClassificacaoVagasUseCase,
 )
-from src.api.application.dto.classificacao_dto import ClassificacaoDTO
 
 
 class ClassificacaoVagasController:
