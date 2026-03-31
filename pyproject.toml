@@ -5,7 +5,7 @@ description = ""
 authors = [
     {name = "Romilson Luis"}
 ]
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "fastapi",
     "update (>=0.0.1,<0.0.2)",
@@ -21,8 +21,6 @@ dependencies = [
     # PostgreSQL
     "sqlalchemy (>=2.0.0,<3.0.0)",
     "psycopg2-binary (>=2.9.0,<3.0.0)",
-    # Observabilidade
-    "prometheus-client (>=0.21.0,<1.0.0)",
     # Segurança e Observabilidade
     "presidio-analyzer (>=2.2.0,<3.0.0)",
     "presidio-anonymizer (>=2.2.0,<3.0.0)",
@@ -30,10 +28,8 @@ dependencies = [
     "piicatcher (>=0.2.0,<1.0.0)",
 ]
 
-[tool.taskipy.tasks]
-ci = "ruff check . && python scripts/pre-commit-check.py --ci-mode && pytest tests/unit/"
-test = "pytest tests/unit/"
-lint = "ruff check ."
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -41,6 +37,7 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
+    "pre-commit (>=3.0.0,<4.0.0)",
     "ruff (>=0.15.6,<0.16.0)",
     "pytest (>=9.0.2,<10.0.0)",
     "pytest-cov (>=7.0.0,<8.0.0)",

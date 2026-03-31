@@ -1,6 +1,8 @@
 """Injeção de dependências."""
 
-from src.api.presentation.controllers.classificacao_controller import ClassificacaoController
+from src.api.presentation.controllers.classificacao_controller import (
+    ClassificacaoController,
+)
 from src.api.presentation.routes.classificacao_routes import ClassificacaoRoutes
 
 

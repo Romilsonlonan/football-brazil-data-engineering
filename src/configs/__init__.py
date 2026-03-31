@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore", # Ignorar variáveis extras do .env
+        extra="ignore",  # Ignorar variáveis extras do .env
     )
 
     # Paths
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
             self.postgres_password,
             self.postgres_host,
             self.postgres_port,
-            self.postgres_db
+            self.postgres_db,
         )
 
 

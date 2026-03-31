@@ -1,4 +1,5 @@
 """Entidades do domínio."""
+
 from .classificacao import Classificacao
 from .classificacao_base import ClassificacaoBase
 from .classificacao_vagas import ClassificacaoVagas

@@ -9,7 +9,7 @@ from src.api.domain.entities.classificacao import Classificacao
 @dataclass
 class ClassificacaoDTO:
     """Data Transfer Object para classificação."""
-    
+
     posicao: int
     time: str
     time_reduzido: str
@@ -23,10 +23,8 @@ class ClassificacaoDTO:
     pontos: int
     aproveitamento: float
     status: str
-    zona: Optional[str] = None
-    status_curto: Optional[str] = None
     temporada: Optional[str] = None
-    
+
     @classmethod
     def from_entity(cls, entity: Classificacao) -> "ClassificacaoDTO":
         """Cria um DTO a partir de uma entidade."""
@@ -43,12 +41,10 @@ class ClassificacaoDTO:
             sg=entity.sg,
             pontos=entity.pontos,
             aproveitamento=entity.aproveitamento,
-            status=entity.zona if entity.zona else entity.status,
-            zona=entity.zona_computada,
-            status_curto=entity.status_curto,
-            temporada=entity.temporada
+            status=entity.status,
+            temporada=entity.temporada,
         )
-    
+
     def to_dict(self) -> dict:
         """Converte o DTO para dicionário."""
         return {
@@ -65,11 +61,9 @@ class ClassificacaoDTO:
             "pontos": self.pontos,
             "aproveitamento": self.aproveitamento,
             "status": self.status,
-            "zona": self.zona,
-            "status_curto": self.status_curto,
-            "temporada": self.temporada
+            "temporada": self.temporada,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "ClassificacaoDTO":
         """Cria um DTO a partir de um dicionário."""
@@ -80,14 +74,12 @@ class ClassificacaoDTO:
             jogos=data.get("jogos", data.get("J", 0)),
             vitorias=data.get("vitorias", data.get("V", 0)),
             empates=data.get("empates", data.get("E", 0)),
-           derrotas=data.get("derrotas", data.get("D", 0)),
+            derrotas=data.get("derrotas", data.get("D", 0)),
             gp=data.get("gp", data.get("GP", 0)),
             gc=data.get("gc", data.get("GC", 0)),
             sg=data.get("sg", data.get("SG", 0)),
             pontos=data.get("pontos", data.get("PTS", 0)),
             aproveitamento=data.get("aproveitamento", 0.0),
-            status=data.get("status", data.get("zona", "SEM_REBAIXAMENTO")),
-            zona=data.get("zona", None),
-            status_curto=data.get("status_curto", None),
-            temporada=data.get("temporada")
+            status=data.get("status", "SEM_REBAIXAMENTO"),
+            temporada=data.get("temporada"),
         )

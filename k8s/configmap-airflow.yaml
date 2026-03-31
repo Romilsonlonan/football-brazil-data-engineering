@@ -17,37 +17,37 @@ metadata:
 data:
   # Executor Configuration
   AIRFLOW__CORE__EXECUTOR: "KubernetesExecutor"
-  
+
   # Loading Examples (disable for production)
   AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-  
+
   # DAGS Configuration
   AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
   AIRFLOW__CORE__LAZY_LOAD_PLUGINS: "false"
   AIRFLOW__CORE__LAZY_LOAD_VARIABLES: "false"
-  
+
   # API Configuration
   AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
-  
+
   # Database Configuration
   # Nota: Use secret externo em produção
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://lakehouse@lakehouse-postgres:5432/lakehouse"
-  
+
   # Webserver Configuration
   AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
   AIRFLOW__WEBSERVER__WEB_SERVER_HOST: "0.0.0.0"
   AIRFLOW__WEBSERVER__WEB_SERVER_PORT: "8080"
-  
+
   # Logging
   AIRFLOW__LOGGING__REMOTE_LOGGING: "false"
   AIRFLOW__LOGGING__DAG_PROCESSOR_LOG_ROOT: "/opt/airflow/logs"
-  
+
   # Kubernetes Configuration
   AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: "lakehouse-airflow"
   AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: "latest"
   AIRFLOW__KUBERNETES__DAGS_VOLUME_SUBPATH: "dags"
   AIRFLOW__KUBERNETES__LOGS_VOLUME_SUBPATH: "logs"
-  
+
   # Python
   PYTHONUNBUFFERED: "1"
   PYTHONDONTWRITEBYTECODE: "1"
