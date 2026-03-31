@@ -2,9 +2,9 @@ name: CI - Lakehouse Brasileiro
 
 on:
   push:
-    branches: [ main, gold-classificacao ]
+    branches: [ main, setup, gold-classificacao ]
   pull_request:
-    branches: [ main, gold-classificacao ]
+    branches: [ main, setup, gold-classificacao ]
 
 jobs:
   lint-and-security:
