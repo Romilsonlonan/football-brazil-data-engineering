@@ -194,3 +194,7 @@ pyrightconfig.json
 
 # Streamlit
 .streamlit/
+
+# VSCode cached directories
+src/api/application/use_cases/.stubs/
+src/api/application/use_cases/.vfsmeta/
