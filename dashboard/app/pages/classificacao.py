@@ -6,12 +6,12 @@ from dashboard.app.components.tables import classification_table, metric_card
 
 
 _ZONE_BUTTONS = [
-    {"label": "T10", "title": "Zona Superior",              "color": "#58a6ff"},
-    {"label": "B10", "title": "Zona Inferior",              "color": "#8b949e"},
-    {"label": "G4",  "title": "Libertadores - fase de grupos", "color": "#3fb950"},
-    {"label": "G6",  "title": "Libertadores - incluindo pré",  "color": "#2ea043"},
-    {"label": "G12", "title": "Sul-Americana",              "color": "#d29922"},
-    {"label": "Z4",  "title": "Rebaixamento",               "color": "#f85149"},
+    {"label": "T10", "title": "Zona Superior",              "color": "#58a6ff", "id": "zone-t10"},
+    {"label": "B10", "title": "Zona Inferior",              "color": "#8b949e", "id": "zone-b10"},
+    {"label": "G4",  "title": "Libertadores - fase de grupos", "color": "#3fb950", "id": "zone-g4"},
+    {"label": "G6",  "title": "Libertadores - incluindo pré",  "color": "#2ea043", "id": "zone-g6"},
+    {"label": "G12", "title": "Sul-Americana",              "color": "#d29922", "id": "zone-g12"},
+    {"label": "Z4",  "title": "Rebaixamento",               "color": "#f85149", "id": "zone-z4"},
 ]
 
 
@@ -20,6 +20,8 @@ def _zone_buttons() -> html.Div:
         html.Button(
             btn["label"],
             title=btn["title"],
+            id=btn["id"],
+            n_clicks=0,
             style={
                 "backgroundColor": btn["color"],
                 "width": "52px",
