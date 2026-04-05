@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #0d1117;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#1f77b4", "font": {"color": "white"}, "id": "fontes", "label": "\ud83d\udce1 Fontes de Dados", "shape": "box", "title": "Web Scraping (ESPN)\nAPIs Externas"}, {"color": "#ff7f0e", "font": {"color": "white"}, "id": "infrastructure", "label": "\ud83c\udfd7\ufe0f Camada de Infraestrutura", "shape": "box", "title": "Ingest\u00e3o de Dados\nAirflow (Orquestra\u00e7\u00e3o)\nWeb Scraping (Requests, BeautifulSoup4)"}, {"color": "#ff7f0e", "font": {"color": "white"}, "id": "ingestao", "label": "\ud83d\udce5 Ingest\u00e3o", "shape": "ellipse"}, {"color": "#ff7f0e", "font": {"color": "white"}, "id": "airflow", "label": "\u2699\ufe0f Airflow (DAGs)", "shape": "ellipse"}, {"color": "#ff7f0e", "font": {"color": "white"}, "id": "web_scraping", "label": "\ud83d\udd77\ufe0f Web Scraping", "shape": "ellipse"}, {"color": "#2ca02c", "font": {"color": "white"}, "id": "application", "label": "\ud83d\udccb Camada de Aplica\u00e7\u00e3o", "shape": "box", "title": "Use Cases (Casos de Uso)\nRegras de Aplica\u00e7\u00e3o"}, {"color": "#2ca02c", "font": {"color": "white"}, "id": "use_cases_classificacao", "label": "\ud83d\udccb Use Cases\nClassifica\u00e7\u00e3o", "shape": "ellipse"}, {"color": "#2ca02c", "font": {"color": "white"}, "id": "use_cases_elenco", "label": "\ud83d\udc65 Use Cases\nElenco", "shape": "ellipse"}, {"color": "#2ca02c", "font": {"color": "white"}, "id": "use_cases_vagas", "label": "\ud83c\udfc6 Use Cases\nVagas", "shape": "ellipse"}, {"color": "#d62728", "font": {"color": "white"}, "id": "domain", "label": "\ud83c\udfdb\ufe0f Camada de Dom\u00ednio", "shape": "box", "title": "Entidades\nObjetos de Valor\nInterfaces de Reposit\u00f3rio\nRegras de Neg\u00f3cio"}, {"color": "#d62728", "font": {"color": "white"}, "id": "domain_entities", "label": "\ud83d\udce6 Entidades\n(Classifica\u00e7\u00e3o, Time, Vagas)", "shape": "ellipse"}, {"color": "#d62728", "font": {"color": "white"}, "id": "domain_value_objects", "label": "\ud83c\udfaf Objetos de Valor\n(Posi\u00e7\u00e3o)", "shape": "ellipse"}, {"color": "#d62728", "font": {"color": "white"}, "id": "domain_repositories", "label": "\ud83d\udd0c Interfaces de\nReposit\u00f3rio", "shape": "ellipse"}, {"color": "#9467bd", "font": {"color": "white"}, "id": "data_lake", "label": "\ud83d\udcbe Data Lake\n(Parquet)", "shape": "box", "title": "Bronze: Dados Brutos\nSilver: Dados Limpos\nGold: Dados Prontos para Neg\u00f3cio"}, {"color": "#ff9896", "font": {"color": "white"}, "id": "bronze", "label": "\ud83e\udd49 Bronze\n(Dados Brutos)", "shape": "ellipse"}, {"color": "#aec7e8", "font": {"color": "white"}, "id": "silver", "label": "\ud83e\udd48 Silver\n(Dados Limpos)", "shape": "ellipse"}, {"color": "#98df8a", "font": {"color": "white"}, "id": "gold", "label": "\ud83e\udd47 Gold\n(Dados de Neg\u00f3cio)", "shape": "ellipse"}, {"color": "#9467bd", "font": {"color": "white"}, "id": "pipeline_classificacao", "label": "\ud83d\udcca Pipeline\nClassifica\u00e7\u00e3o", "shape": "ellipse"}, {"color": "#9467bd", "font": {"color": "white"}, "id": "pipeline_elenco", "label": "\ud83d\udc65 Pipeline\nElenco", "shape": "ellipse"}, {"color": "#17becf", "font": {"color": "white"}, "id": "serving", "label": "\ud83d\uddc4\ufe0f Camada de Serving\n(PostgreSQL)", "shape": "box", "title": "Dados processados\nprontos para consumo\nIntegra\u00e7\u00e3o com Dash/Superset"}, {"color": "#e377c2", "font": {"color": "white"}, "id": "fastapi", "label": "\u26a1 FastAPI\n(API REST)", "shape": "box", "title": "Endpoints REST\nDocumenta\u00e7\u00e3o autom\u00e1tica\n(pydantic, uvicorn)"}, {"color": "#bcbd22", "font": {"color": "white"}, "id": "dashboard", "label": "\ud83d\udcca Dashboard\n(Dash/Plotly)", "shape": "box", "title": "Visualiza\u00e7\u00e3o interativa\nClassifica\u00e7\u00e3o/Elenco\nDashboards Streamlit"}, {"color": "#ffbb78", "font": {"color": "white"}, "id": "superset", "label": "\ud83d\udcc8 Apache Superset\n(BI)", "shape": "box", "title": "Dashboards empresariais\nGr\u00e1ficos Avan\u00e7ados\nBI corporativo"}, {"color": "#ff5555", "font": {"color": "white"}, "id": "seguranca", "label": "\ud83d\udd12 Seguran\u00e7a\n(Presidio)", "shape": "box", "title": "Detec\u00e7\u00e3o de PII\n(CPF, CNPJ, Telefone)\nM\u00e1scaramento de dados"}, {"color": "#55aaff", "font": {"color": "white"}, "id": "observabilidade", "label": "\ud83d\udce1 Observabilidade\n(Prometheus)", "shape": "box", "title": "M\u00e9tricas\nMonitoramento\nLogs"}]);
+                  edges = new vis.DataSet([{"color": "#1f77b4", "from": "fontes", "to": "infrastructure", "width": 2}, {"color": "#ff7f0e", "from": "infrastructure", "to": "ingestao", "width": 1}, {"color": "#ff7f0e", "from": "infrastructure", "to": "airflow", "width": 1}, {"color": "#ff7f0e", "from": "infrastructure", "to": "web_scraping", "width": 1}, {"color": "#ff7f0e", "from": "infrastructure", "to": "application", "width": 2}, {"color": "#2ca02c", "from": "application", "to": "use_cases_classificacao", "width": 1}, {"color": "#2ca02c", "from": "application", "to": "use_cases_elenco", "width": 1}, {"color": "#2ca02c", "from": "application", "to": "use_cases_vagas", "width": 1}, {"color": "#2ca02c", "from": "application", "to": "domain", "width": 2}, {"color": "#d62728", "from": "domain", "to": "domain_entities", "width": 1}, {"color": "#d62728", "from": "domain", "to": "domain_value_objects", "width": 1}, {"color": "#d62728", "from": "domain", "to": "domain_repositories", "width": 1}, {"color": "#d62728", "from": "domain", "to": "data_lake", "width": 2}, {"color": "#9467bd", "from": "data_lake", "to": "bronze", "width": 1}, {"color": "#9467bd", "dashes": true, "from": "bronze", "to": "pipeline_classificacao", "width": 1}, {"color": "#9467bd", "dashes": true, "from": "bronze", "to": "pipeline_elenco", "width": 1}, {"color": "#9467bd", "dashes": true, "from": "bronze", "to": "silver", "width": 1}, {"color": "#9467bd", "dashes": true, "from": "silver", "to": "gold", "width": 1}, {"color": "#9467bd", "from": "data_lake", "to": "serving", "width": 2}, {"color": "#17becf", "from": "serving", "to": "fastapi", "width": 2}, {"color": "#17becf", "from": "serving", "to": "dashboard", "width": 2}, {"color": "#17becf", "from": "serving", "to": "superset", "width": 2}, {"color": "#ff5555", "dashes": true, "from": "serving", "to": "seguranca", "width": 1}, {"color": "#55aaff", "dashes": true, "from": "fastapi", "to": "observabilidade", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"nodes": {"shape": "box", "font": {"size": 14, "face": "arial"}, "borderWidth": 2}, "edges": {"color": {"inherit": true}, "arrows": {"to": {"enabled": true, "scaleFactor": 1}}, "smooth": {"type": "continuous"}}, "physics": {"enabled": true, "forceAtlas2Based": {"gravitationalConstant": -100, "centralGravity": 0.01, "springLength": 150, "springConstant": 0.08}, "solver": "forceAtlas2Based", "stabilization": {"enabled": true, "iterations": 200}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

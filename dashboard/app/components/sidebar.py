@@ -9,7 +9,7 @@ def sidebar(times: list[str]) -> html.Div:
         className="sidebar",
         children=[
             _logo(),
-            _nav_menu(),
+            #            _nav_menu(),
             _filters(times),
         ],
     )
@@ -20,28 +20,28 @@ def _logo() -> html.Div:
         className="sidebar-logo",
         children=[
             html.H1("🏆 Brasileirão"),
-            html.P("Painel de Controle 2026"),
+            html.P("Campeonato Brasileiro 2026"),
         ],
     )
 
 
-def _nav_menu() -> html.Div:
-    return html.Div(
-        className="nav-menu",
-        children=[
-            html.Div("Painel de Controle", className="nav-title"),
-            html.Div(
-                id="nav-classificacao",
-                className="nav-item",
-                children=[html.Span("📋", className="nav-icon"), "Classificação"],
-            ),
-            html.Div(
-                id="nav-elenco",
-                className="nav-item",
-                children=[html.Span("👔", className="nav-icon"), "Elenco"],
-            ),
-        ],
-    )
+# def _nav_menu() -> html.Div:
+#    return html.Div(
+#        className="nav-menu",
+#        children=[
+#            html.Div("Painel de Controle", className="nav-title"),
+#            html.Div(
+#                id="nav-classificacao",
+#                className="nav-item",
+#                children=[html.Span("📋", className="nav-icon"), "Classificação"],
+#            ),
+#            html.Div(
+#                id="nav-elenco",
+#                className="nav-item",
+#                children=[html.Span("👔", className="nav-icon"), "Elenco"],
+#            ),
+#        ],
+#    )
 
 
 def _filters(times: list[str]) -> html.Div:
@@ -58,11 +58,30 @@ def _filters(times: list[str]) -> html.Div:
             dcc.Dropdown(
                 id="page-selector",
                 options=[
-                    {"label": "🏠 Painel de Controle", "value": "dashboard"},
                     {"label": "📊 Classificação", "value": "classificacao"},
                     {"label": "👥 Elenco", "value": "elenco"},
                 ],
                 value="dashboard",
+                clearable=False,
+            ),
+            html.Label("Mês", className="filter-label"),
+            dcc.Dropdown(
+                id="month-selector",
+                options=[
+                    {"label": "Janeiro", "value": 1},
+                    {"label": "Fevereiro", "value": 2},
+                    {"label": "Março", "value": 3},
+                    {"label": "Abril", "value": 4},
+                    {"label": "Maio", "value": 5},
+                    {"label": "Junho", "value": 6},
+                    {"label": "Julho", "value": 7},
+                    {"label": "Agosto", "value": 8},
+                    {"label": "Setembro", "value": 9},
+                    {"label": "Outubro", "value": 10},
+                    {"label": "Novembro", "value": 11},
+                    {"label": "Dezembro", "value": 12},
+                ],
+                value=4,
                 clearable=False,
             ),
             html.Label("Time", className="filter-label"),
@@ -78,12 +97,25 @@ def _filters(times: list[str]) -> html.Div:
                 id="top10-selector",
                 options=[
                     {"label": "Todos os Times", "value": "all"},
-                    {"label": "🏆 Libertadores (1-6)", "value": "libertadores"},
+                    {"label": "🏆 Libertadores (1-4)", "value": "libertadores"},
                     {"label": "🌎 Sul-Americana (7-14)", "value": "sulamericana"},
                     {"label": "⚠️ Rebaixamento (17-20)", "value": "rebaixamento"},
+                    {"label": "⬆️ Top 10 (Primeiros)", "value": "top10"},
+                    {"label": "⬇️ Bottom 10 (Últimos)", "value": "bottom10"},
                 ],
                 value="all",
                 clearable=False,
+            ),
+            html.Div(
+                id="sidebar-calendar",
+                className="sidebar-calendar",
+                children=[],
+            ),
+            html.Img(
+                src="https://i.ibb.co/0yBYM9HS/bola.png",
+                className="sidebar-calendar-ball",
+                id="refresh-ball",
+                n_clicks=0,
             ),
         ],
     )
