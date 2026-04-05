@@ -69,9 +69,14 @@ class ElencoGoleirosBronzePipeline(BasePipeline):
             try:
                 response = requests.get(url, headers=self.headers, timeout=30)
                 return response
-            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as e:
                 wait_time = self.retry_delay * (2**attempt)
-                logger.warning(f"Tentativa {attempt + 1}/{self.max_retries} falhou: {e}. Esperando {wait_time}s...")
+                logger.warning(
+                    f"Tentativa {attempt + 1}/{self.max_retries} falhou: {e}. Esperando {wait_time}s..."
+                )
                 time.sleep(wait_time)
         raise requests.RequestException(f"Falha após {self.max_retries} tentativas")
 
@@ -135,7 +140,7 @@ class ElencoGoleirosBronzePipeline(BasePipeline):
             border_style="cyan",
             style="on #0d1117",
         )
-        
+
         # Cores para as colunas
         table.add_column("Nome", style="green bold", width=28)
         table.add_column("POS", justify="center", style="cyan", width=5)
@@ -178,15 +183,7 @@ class ElencoGoleirosBronzePipeline(BasePipeline):
         """Extrai dados dos goleiros da ESPN."""
         console = Console(force_terminal=True, file=sys.stdout)
 
-        console.print(
-            Panel.fit(
-                "[bold cyan]🧤 GOLEIROS[/bold cyan] - [yellow]BRASILEIRÃO 2026[/yellow] ([white]20 TIMES[/white])",
-                "[dim]Dados extraídos da ESPN - Camada Bronze[/dim]",
-                border_style="cyan",
-                style="on #0d1117",
-                title="🏆",
-            )
-        )
+        console.print("[bold cyan]🧤 GOLEIROS - BRASILEIRÃO 2026[/bold cyan]")
 
         logger.info("=" * 60)
         logger.info("🏃 INICIANDO: Extração de Goleiros - Bronze")
@@ -231,18 +228,12 @@ class ElencoGoleirosBronzePipeline(BasePipeline):
                 console.print("\n")
 
         df = pd.DataFrame(all_goalkeepers)
-        
+
         # Resumo final
         console.print(
-            Panel.fit(
-                "[bold green]✅ Extração Concluída[/bold green]"
-                "[white]Total de goleiros: [/white][green]" + str(len(df)) + "[/green]"
-                "[white]Times processados: [/white][cyan]" + str(len(team_data)) + "/" + str(len(TEAMS_URLS)) + "[/cyan]",
-                border_style="green",
-                style="on #0d1117",
-            )
+            f"[bold green]✅ Extração Concluída[/bold green] - Total: {len(df)} goleiros"
         )
-        
+
         logger.info(f"Total de goleiros extraídos: {len(df)}")
         return df
 

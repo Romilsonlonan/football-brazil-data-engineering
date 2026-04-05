@@ -79,14 +79,14 @@ body {
 
 .sidebar-logo h1 {
     color: #ffffff;
-    font-size: 15px;
+    font-size: 24px;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .sidebar-logo p {
     color: rgba(255, 255, 255, 0.55);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 400;
 }
 
@@ -157,6 +157,112 @@ body {
     margin-top: 0;
 }
 
+.sidebar-calendar {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(22, 27, 34, 0.6);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.sidebar-calendar-content {
+    font-size: 12px;
+}
+
+.sidebar-calendar-content .sidebar-calendar-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+.sidebar-calendar-content .calendar-header {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-calendar-content .calendar-icon {
+    margin-right: 4px;
+}
+
+.sidebar-calendar-content .calendar-title {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.sidebar-calendar-content .calendar-empty {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.sidebar-calendar-content .calendar-empty p {
+    margin: 4px 0;
+}
+
+.sidebar-calendar-content .sidebar-calendar-ball {
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 16px auto 0;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.6s ease-in-out;
+}
+
+.sidebar-calendar-content .sidebar-calendar-ball.spin {
+    transform: rotate(360deg);
+}
+
+.calendar-table {
+    width: 100%;
+    font-size: 10px;
+    margin-top: 8px;
+    border-collapse: collapse;
+}
+
+.calendar-table th {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 2px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.calendar-table td {
+    padding: 4px 2px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.calendar-table tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-calendar-content .data-table {
+    font-size: 10px;
+    margin-top: 8px;
+}
+
+.sidebar-calendar-content .data-table th,
+.sidebar-calendar-content .data-table td {
+    padding: 4px 2px;
+}
+
 /* Botão toggle flutuante (fora da sidebar) */
 .sidebar-toggle-float {
     position: fixed;
@@ -195,6 +301,42 @@ body {
 }
 
 /* ============================================================
+   POSITION BUTTONS (Filtro de Posição)
+   ============================================================ */
+.position-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.position-btn {
+    background: var(--card-background);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1 1 calc(50% - 3px);
+    min-width: 60px;
+    text-align: center;
+}
+
+.position-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--primary);
+}
+
+.position-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+/* ============================================================
    CONTEÚDO PRINCIPAL
    ============================================================ */
 .main-content {
@@ -218,7 +360,7 @@ body {
 }
 
 .page-header h1 {
-    font-size: 56px;
+    font-size: 36px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 6px;
@@ -226,7 +368,7 @@ body {
 
 .page-header p {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 /* ============================================================
@@ -400,6 +542,13 @@ body {
 
 .data-table tr:hover {
     background: var(--card-hover);
+}
+
+.table-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
 }
 
 .posicao-badge {
@@ -634,4 +783,33 @@ body {
         padding: 6px 4px;
         font-size: 11px;
     }
+}
+
+.empty-state,
+.info-box {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    background: rgba(22, 27, 34, 0.45);
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.info-box {
+    text-align: left;
+}
+
+.external-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--primary);
+    text-decoration: none;
+    padding: 8px 16px;
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+}
+
+.external-link:hover {
+    background: var(--primary);
+    color: var(--background);
 }

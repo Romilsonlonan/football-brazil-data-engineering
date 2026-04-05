@@ -96,14 +96,7 @@ class ElencoBronzePipeline(BasePipeline):
 
         console = Console(force_terminal=True)
 
-        console.print(
-            Panel.fit(
-                "[bold cyan]👥 ELENCO BRASILEIRÃO 2026 (20 TIMES)[/bold cyan]\n"
-                "[dim]Dados extraídos da ESPN[/dim]",
-                border_style="cyan",
-                title="🏆 Elenco Times",
-            )
-        )
+        console.print("[bold cyan]👥 ELENCO BRASILEIRÃO 2026[/bold cyan]")
 
         all_players = []
         successful_teams = []
@@ -301,9 +294,9 @@ class ElencoBronzePipeline(BasePipeline):
             jogadores = data["jogadores"]
 
             with open(output_file, "a", encoding="utf-8") as f:
-                f.write(f"\n{'='*80}\n")
+                f.write(f"\n{'=' * 80}\n")
                 f.write(f"TIME: {team_name}\n")
-                f.write(f"{'='*80}\n")
+                f.write(f"{'=' * 80}\n")
 
             if goleiros:
                 with open(output_file, "a", encoding="utf-8") as f:
@@ -336,12 +329,7 @@ class ElencoBronzePipeline(BasePipeline):
         from rich import box
 
         console.print("\n")
-        console.print(
-            Panel.fit(
-                "[bold cyan]📊 RESUMO DOS ELENCOS (20 TIMES)[/bold cyan]",
-                border_style="cyan",
-            )
-        )
+        console.print("[bold cyan]📊 RESUMO DOS ELENCOS (20 TIMES)[/bold cyan]")
 
         table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
         table.add_column("Time", style="yellow", width=22)
