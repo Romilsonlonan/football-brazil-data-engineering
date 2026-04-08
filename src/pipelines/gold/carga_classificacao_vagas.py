@@ -122,9 +122,11 @@ def run():
 
     # Adicionar coluna de aproveitamento
     df["aproveitamento"] = df.apply(
-        lambda row: round((row["pontos"] / (row["jogos"] * 3)) * 100, 2)
-        if row["jogos"] > 0
-        else 0.0,
+        lambda row: (
+            round((row["pontos"] / (row["jogos"] * 3)) * 100, 2)
+            if row["jogos"] > 0
+            else 0.0
+        ),
         axis=1,
     )
 
@@ -214,6 +216,15 @@ def run():
 
     df.to_parquet(gold_path, index=False)
     logger.info(f"✅ Arquivo Parquet salvo em: {gold_path}")
+
+    if settings.minio_enabled:
+        from src.utils.minio_client import save_to_minio
+
+        minio_path = save_to_minio(df, "gold", "classificacao-vagas.parquet")
+        if minio_path:
+            logger.info(f"☁️  Arquivo Parquet salvo no MinIO: {minio_path}")
+        else:
+            logger.warning("⚠️  Falha ao salvar no MinIO")
 
     # ============================================
     # Carregar para PostgreSQL (se disponível)

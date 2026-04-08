@@ -19,6 +19,31 @@ class DashboardService:
     _elenco_cache: Optional[DataFrame] = None
     _calendario_cache: dict = {}
 
+    TIME_NAME_MAP = {
+        "Athletico-PR": "Athletico Paranaense",
+        "Atlético-MG": "Atlético Mineiro",
+        "Vasco da Gama": "Vasco",
+        "Red Bull Bragantino": "Bragantino",
+    }
+    """Mapeamento de nomes do bronze para nomes do gold."""
+
+    @classmethod
+    def normalize_team_for_search(cls, team: str) -> str:
+        """Normaliza nome do time para busca em DataFrames gold."""
+        if not team:
+            return team
+        if team in cls.TIME_NAME_MAP:
+            return cls.TIME_NAME_MAP[team]
+        if "Athletico" in team and "Paranaense" not in team:
+            return "Athletico Paranaense"
+        if "Atlético" in team and "Mineiro" not in team:
+            return "Atlético Mineiro"
+        if "Vasco" in team:
+            return "Vasco"
+        if "Bragantino" in team:
+            return "Bragantino"
+        return team
+
     @classmethod
     def get_classificacao_use_case(cls) -> BuscarClassificacaoUseCase:
         if cls._classificacao_use_case is None:
@@ -45,7 +70,7 @@ class DashboardService:
 
     @classmethod
     def get_elenco_df(cls) -> DataFrame:
-        """Retorna o DataFrame completo do elenco (para estatísticas do campeonato)."""
+        """Retorna o DataFrame completo do elenco (para estatísticas do campanhaonato)."""
         if cls._elenco_cache is None:
             try:
                 cls._elenco_cache = cls.get_elenco_use_case().execute()
@@ -55,8 +80,8 @@ class DashboardService:
         return cls._elenco_cache
 
     @classmethod
-    def get_estatisticas_campeonato(cls, month: int = None) -> dict:
-        """Retorna estatísticas agregadas do campeonato para os cards."""
+    def get_estatisticas_campeonato(cls, month: int = None, team: str = None) -> dict:
+        """Retorna estatísticas agregadas do campanhaonato para os cards."""
         df = cls.get_elenco_df()
         if df.empty:
             return {
@@ -74,6 +99,9 @@ class DashboardService:
 
         if month and "mes" in df.columns:
             df = df[df["mes"] <= month]
+        if team and team != "all":
+            normalized = cls.normalize_team_for_search(team)
+            df = df[df["Time"].str.contains(normalized, case=False, na=False)]
 
         artilheiro = df.loc[df["G"].idxmax()] if not df.empty else None
         total_ca = int(df["CA"].sum())
@@ -101,7 +129,9 @@ class DashboardService:
         }
 
     @classmethod
-    def get_top_cartoes_amarelos(cls, top: int = 4, month: int = None) -> DataFrame:
+    def get_top_cartoes_amarelos(
+        cls, top: int = 4, month: int = None, team: str = None
+    ) -> DataFrame:
         """Retorna os jogadores com mais cartões amarelos."""
         df = cls.get_elenco_df()
         if df.empty:
@@ -110,18 +140,30 @@ class DashboardService:
         df["CA"] = pd.to_numeric(df["CA"], errors="coerce").fillna(0)
         if month and "mes" in df.columns:
             df = df[df["mes"] <= month]
+        if team and team != "all":
+            normalized = cls.normalize_team_for_search(team)
+            df = df[df["Time"].str.contains(normalized, case=False, na=False)]
+        # Filtrar apenas jogadores com cartões amarelos > 0
+        df = df[df["CA"] > 0]
         return df.nlargest(top, "CA")[["Nome", "Time", "CA"]]
 
     @classmethod
-    def get_top_cartoes_vermelhos(cls, top: int = 4, month: int = None) -> DataFrame:
+    def get_top_cartoes_vermelhos(
+        cls, top: int = 4, month: int = None, team: str = None
+    ) -> DataFrame:
         """Retorna os jogadores com mais cartões vermelhos."""
         df = cls.get_elenco_df()
         if df.empty:
             return DataFrame()
         df = df.copy()
+        if team and team != "all":
+            normalized = cls.normalize_team_for_search(team)
+            df = df[df["Time"].str.contains(normalized, case=False, na=False)]
         df["CV"] = pd.to_numeric(df["CV"], errors="coerce").fillna(0)
         if month and "mes" in df.columns:
             df = df[df["mes"] <= month]
+        # Filtrar apenas jogadores com cartões vermelhos > 0
+        df = df[df["CV"] > 0]
         return df.nlargest(top, "CV")[["Nome", "Time", "CV"]]
 
     @classmethod
@@ -158,7 +200,8 @@ class DashboardService:
         df = pd.read_parquet(file_path)
         if df.empty or not team:
             return df
-        df_team = df[df["Time"].str.contains(team, case=False, na=False)]
+        normalized_team = cls.normalize_team_for_search(team)
+        df_team = df[df["Time"].str.contains(normalized_team, case=False, na=False)]
         cols = [
             "Nome",
             "POS",
@@ -197,6 +240,24 @@ class DashboardService:
         return goleiros
 
     @classmethod
+    def get_all_goalkeepers(cls) -> DataFrame:
+        """Retorna todos os goleiros do campanhaonato (da camada gold)."""
+        gold_path = get_data_path()
+        file_path = os.path.join(gold_path, "elenco_goleiros.parquet")
+        if not os.path.exists(file_path):
+            return DataFrame()
+        return pd.read_parquet(file_path)
+
+    @classmethod
+    def get_all_field_players(cls) -> DataFrame:
+        """Retorna todos os jogadores de campo do campanhaonato (da camada gold)."""
+        gold_path = get_data_path()
+        file_path = os.path.join(gold_path, "elenco_jogadores_campo.parquet")
+        if not os.path.exists(file_path):
+            return DataFrame()
+        return pd.read_parquet(file_path)
+
+    @classmethod
     def get_field_players_by_team(cls, team: str, month: int = None) -> DataFrame:
         """Retorna os jogadores de campo de um time específico (da camada gold).
         O elenco é estático por temporada, então o mês não afeta o resultado.
@@ -208,7 +269,8 @@ class DashboardService:
         df = pd.read_parquet(file_path)
         if df.empty or not team:
             return df
-        df_team = df[df["Time"].str.contains(team, case=False, na=False)]
+        normalized_team = cls.normalize_team_for_search(team)
+        df_team = df[df["Time"].str.contains(normalized_team, case=False, na=False)]
         cols = [
             "Nome",
             "POS",
@@ -257,7 +319,7 @@ class DashboardService:
             return DataFrame()
         try:
             df = pd.read_parquet(file_path)
-            if team:
+            if team and team != "all":
                 mask1 = df["time_normalizado"].str.contains(team, case=False, na=False)
                 mask2 = df["time"].str.contains(team, case=False, na=False)
                 df = df[mask1 | mask2]

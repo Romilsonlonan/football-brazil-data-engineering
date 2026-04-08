@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     postgres_host: str = Field(default="")
     postgres_port: int = Field(default=0)
 
+    # MinIO
+    minio_endpoint: str = Field(default="localhost:9000")
+    minio_access_key: str = Field(default="minioadmin")
+    minio_secret_key: str = Field(default="minioadmin")
+    minio_bucket: str = Field(default="lakehouse")
+    minio_enabled: bool = Field(default=False)
+
     @property
     def postgres_url(self) -> str:
         """Retorna a URL de conexão com o Postgres."""

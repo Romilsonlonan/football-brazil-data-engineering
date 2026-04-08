@@ -1,15 +1,16 @@
 """Pipeline Gold - Carga para PostgreSQL/Superset.
-========================================================
+=======================================================
 
 Este pipeline é responsável por:
 - Ler os dados da camada Silver (dados tratados)
+- Aplicar regras de negócio via Domain Services (DDD)
 - Carregar os dados no PostgreSQL (banco do Superset)
 - Criar a tabela ready-to-use para visualização
 
 Fluxo:
     Bronze (Raw) → Silver (Tratado) → Gold (PostgreSQL/Superset)
 
-Tags: gold, carga, postgresql, superset, classificacao
+Tags: gold, carga, postgresql, superset, classificacao, ddd
 """
 
 import logging
@@ -18,6 +19,11 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 from src.configs import settings
+from src.contexts.classificacao.domain import (
+    Classificacao,
+    CalculadoraClassificacao,
+    CalculadoraColocacao,
+)
 
 # Configurar logging
 logging.basicConfig(
@@ -26,10 +32,61 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def df_para_entities(df: pd.DataFrame) -> list[Classificacao]:
+    """Converte DataFrame para Entities do domínio DDD."""
+    entities = []
+    for _, row in df.iterrows():
+        entities.append(
+            Classificacao(
+                time=str(row.get("time", "")),
+                pontos=int(row.get("pontos", 0)),
+                jogos=int(row.get("jogos", 0)),
+                vitorias=int(row.get("vitorias", 0)),
+                empates=int(row.get("empates", 0)),
+                derrotas=int(row.get("derrotas", 0)),
+                goals_pro=int(row.get("gols_pro", 0)),
+                goals_contra=int(row.get("gols_contra", 0)),
+                saldo_goals=int(row.get("saldo_gols", 0)),
+            )
+        )
+    return entities
+
+
+def entities_para_df(
+    entities: list[Classificacao],
+    calc_colocacao: CalculadoraColocacao,
+    calc_aproveitamento: CalculadoraClassificacao,
+) -> pd.DataFrame:
+    """Converte Entities de volta para DataFrame com regras DDD aplicadas."""
+    ordenadas = calc_colocacao.ordenar()
+
+    data = []
+    for pos, entity in enumerate(ordenadas, start=1):
+        aproveitamento = calc_aproveitamento.calcular_aproveitamento(entity)
+
+        data.append(
+            {
+                "posicao": pos,
+                "time": entity.time,
+                "pontos": entity.pontos,
+                "jogos": entity.jogos,
+                "vitorias": entity.vitorias,
+                "empates": entity.empates,
+                "derrotas": entity.derrotas,
+                "gols_pro": entity.goals_pro,
+                "gols_contra": entity.goals_contra,
+                "saldo_gols": entity.saldo_goals,
+                "aproveitamento": aproveitamento.valor,
+            }
+        )
+
+    return pd.DataFrame(data)
+
+
 def run():
-    """Executa o pipeline Gold de carga de classificação."""
+    """Executa o pipeline Gold de carga de classificação com DDD."""
     logger.info("=" * 60)
-    logger.info("🔄 PIPELINE GOLD - CARGA CLASSIFICAÇÃO")
+    logger.info("🔄 PIPELINE GOLD - CARGA CLASSIFICAÇÃO (COM DDD)")
     logger.info("Carregando dados para PostgreSQL/Superset")
     logger.info("=" * 60)
 
@@ -37,13 +94,12 @@ def run():
     silver_path = settings.silver_path / "classificacao-limpa.parquet"
 
     if not silver_path.exists():
-        raise FileNotFoundError(f"Arquivo Silver não encontrado: {silver_path}")
+        raise FileNotFoundError(f"Arquivo não encontrado: {silver_path}")
 
     logger.info(f"Lendo dados de: {silver_path}")
 
     # Ler arquivo Parquet
     df = pd.read_parquet(silver_path)
-    # Validar que o DataFrame não está vazio
     if df.empty:
         raise ValueError(
             "DataFrame está vazio. Não há dados para carregar no PostgreSQL."
@@ -53,7 +109,31 @@ def run():
     logger.info(f"Colunas: {df.columns.tolist()}")
 
     # ============================================
-    # ETAPA 1: Salvar arquivo Parquet na Gold
+    # DOMAIN SERVICE: Aplicar regras de negócio DDD
+    # ============================================
+    logger.info("")
+    logger.info("🏛️ ETAPA DDD: Aplicando Domain Services...")
+
+    entities = df_para_entities(df)
+    logger.info(f"Entities criadas: {len(entities)}")
+
+    calc_colocacao = CalculadoraColocacao()
+    calc_aproveitamento = CalculadoraClassificacao()
+
+    for e in entities:
+        calc_colocacao.adicionar(e)
+
+    ordenado = calc_colocacao.ordenar()
+    df = entities_para_df(ordenado, calc_colocacao, calc_aproveitamento)
+    logger.info(f"Regras DDD aplicadas: ordenação + aproveitamento")
+
+    top4 = calc_colocacao.top_4()
+    rebaixados = calc_colocacao.rebaixados()
+    logger.info(f"🏆 Libertadores: {[c.time for c in top4]}")
+    logger.info(f"⬇️  Rebaixados: {[c.time for c in rebaixados]}")
+
+    # ============================================
+    # ETAPA 1: Salvar arquivo Parquet na Gold (Local)
     # ============================================
     logger.info("")
     logger.info("💾 ETAPA 1: Salvando arquivo Parquet na Gold...")
@@ -63,6 +143,18 @@ def run():
 
     df.to_parquet(gold_path, index=False)
     logger.info(f"✅ Arquivo Parquet salvo em: {gold_path}")
+
+    # ============================================
+    # ETAPA 1B: Salvar no MinIO (se habilitado)
+    # ============================================
+    if settings.minio_enabled:
+        from src.utils.minio_client import save_to_minio
+
+        minio_path = save_to_minio(df, "gold", "classificacao.parquet")
+        if minio_path:
+            logger.info(f"☁️  Arquivo Parquet salvo no MinIO: {minio_path}")
+        else:
+            logger.warning("⚠️  Falha ao salvar no MinIO (continuando com local)")
 
     # ============================================
     # ETAPA 2: Carregar para PostgreSQL

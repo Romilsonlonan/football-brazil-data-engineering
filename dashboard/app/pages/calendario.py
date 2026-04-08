@@ -153,7 +153,9 @@ def render_sidebar(time: str, month: int) -> html.Div:
                 className="calendar-header",
                 children=[
                     html.Span("⚽", className="calendar-icon"),
-                    html.Span(f"{time} - {month_name}"),
+                    html.Span(
+                        f"{'Todos os Times' if time == 'all' else time} - {month_name}"
+                    ),
                 ],
             ),
             html.Div(

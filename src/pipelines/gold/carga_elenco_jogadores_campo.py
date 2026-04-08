@@ -76,9 +76,7 @@ class GoldCargaElencoJogadoresCampo:
         silver_path = settings.silver_path / "elenco_jogadores_campo_tratados.parquet"
 
         if not silver_path.exists():
-            raise FileNotFoundError(
-                f"Arquivo Silver nao encontrado: {silver_path}"
-            )
+            raise FileNotFoundError(f"Arquivo Silver nao encontrado: {silver_path}")
 
         logger.info(f"Lendo dados de: {silver_path}")
 
@@ -104,6 +102,15 @@ class GoldCargaElencoJogadoresCampo:
 
         df.to_parquet(gold_path, index=False)
         logger.info(f"✅ Arquivo Parquet salvo em: {gold_path}")
+
+        if settings.minio_enabled:
+            from src.utils.minio_client import save_to_minio
+
+            minio_path = save_to_minio(df, "gold", "elenco_jogadores_campo.parquet")
+            if minio_path:
+                logger.info(f"☁️  Arquivo Parquet salvo no MinIO: {minio_path}")
+            else:
+                logger.warning("⚠️  Falha ao salvar no MinIO")
 
         return gold_path
 
@@ -168,9 +175,7 @@ class GoldCargaElencoJogadoresCampo:
                     f"Verificando dados existentes..."
                 )
                 result = conn.execute(
-                    text(
-                        f"SELECT COUNT(*) FROM {self.schema_name}.{self.table_name}"
-                    )
+                    text(f"SELECT COUNT(*) FROM {self.schema_name}.{self.table_name}")
                 )
                 existing_count = result.fetchone()[0]
                 logger.info(f"Registros existentes: {existing_count}")

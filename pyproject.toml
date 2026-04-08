@@ -29,6 +29,9 @@ dependencies = [
     "dash (>=2.18.0,<3.0.0)",
     "plotly (>=6.0.0,<7.0.0)",
     "pyvis (>=0.3.2,<0.4.0)",
+    # MinIO/S3
+    "minio (>=7.0.0,<8.0.0)",
+    "apache-airflow (>=3.2.0,<4.0.0)",
 ]
 
 [tool.poetry]

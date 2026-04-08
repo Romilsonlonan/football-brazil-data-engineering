@@ -8,9 +8,13 @@ def sidebar(times: list[str]) -> html.Div:
         id="sidebar",
         className="sidebar",
         children=[
-            _logo(),
-            #            _nav_menu(),
-            _filters(times),
+            html.Div(
+                className="sidebar-scroll",
+                children=[
+                    _logo(),
+                    _filters(times),
+                ],
+            )
         ],
     )
 
@@ -45,11 +49,11 @@ def _logo() -> html.Div:
 
 
 def _filters(times: list[str]) -> html.Div:
-    time_options = (
-        [{"label": t, "value": t} for t in times]
-        if times
-        else [{"label": "Nenhum time disponível", "value": ""}]
+    time_options = [{"label": "Todos os Times", "value": "all"}] + (
+        [{"label": t, "value": t} for t in times] if times else []
     )
+    if not times:
+        time_options = [{"label": "Nenhum time disponível", "value": ""}]
 
     return html.Div(
         className="filters-section",
@@ -91,6 +95,7 @@ def _filters(times: list[str]) -> html.Div:
                 value="",
                 clearable=True,
                 placeholder="Selecione um time...",
+                searchable=True,
             ),
             html.Label("Top 10", className="filter-label"),
             dcc.Dropdown(
@@ -111,11 +116,26 @@ def _filters(times: list[str]) -> html.Div:
                 className="sidebar-calendar",
                 children=[],
             ),
+            html.Hr(
+                className="sidebar-divider",
+                style={
+                    "margin": "36px 0",
+                    "border": "none",
+                    "borderTop": "2px solid #555",
+                },
+            ),
             html.Img(
                 src="https://i.ibb.co/0yBYM9HS/bola.png",
                 className="sidebar-calendar-ball",
                 id="refresh-ball",
                 n_clicks=0,
+                style={
+                    "width": "62px",
+                    "height": "auto",
+                    "display": "block",
+                    "margin": "16px auto",
+                    "objectFit": "contain",
+                },
             ),
         ],
     )

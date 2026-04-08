@@ -9,24 +9,45 @@ from dashboard.app.services import DashboardService
 def render(time: str = None, month: int = None) -> html.Div:
     """Renderiza a página de elenco com estatísticas do Campeonato."""
     try:
-        stats = DashboardService.get_estatisticas_campeonato(month)
-        top_ca = DashboardService.get_top_cartoes_amarelos(4, month)
-        top_cv = DashboardService.get_top_cartoes_vermelhos(4, month)
+        stats = DashboardService.get_estatisticas_campeonato(month, time)
+        top_ca = DashboardService.get_top_cartoes_amarelos(4, month, time)
+        top_cv = DashboardService.get_top_cartoes_vermelhos(4, month, time)
         top_artilheiros = DashboardService.get_top_artilheiros(5, month)
 
         goleiros = DataFrame()
         jogadores_campo = DataFrame()
-        if time:
+
+        # Quando "all" ou vazio, mostrar todos os jogadores do campanhaonato
+        if time and time != "all":
             goleiros = DashboardService.get_goalkeepers_by_team(time, month)
             jogadores_campo = DashboardService.get_field_players_by_team(time, month)
+        else:
+            goleiros = DashboardService.get_all_goalkeepers()
+            jogadores_campo = DashboardService.get_all_field_players()
+
+        # Texto do header muda conforme seleção
+        header_title = (
+            f"👥 Elenco - {time}"
+            if time and time != "all"
+            else "👥 Estatísticas do Campeonato"
+        )
+        header_subtitle = (
+            f"Jogadores do {time}"
+            if time and time != "all"
+            else "Dados completos do Brasileirão"
+        )
+
+        # Calcular totais de jogadores
+        total_goleiros = len(goleiros) if not goleiros.empty else 0
+        total_jogadores = len(jogadores_campo) if not jogadores_campo.empty else 0
 
         return html.Div(
             children=[
                 html.Div(
                     className="page-header",
                     children=[
-                        html.H1("👥 Estatísticas do Campeonato"),
-                        html.P("Dados completos do Brasileirão"),
+                        html.H1(header_title),
+                        html.P(header_subtitle),
                     ],
                 ),
                 # 4 cards principais
@@ -52,16 +73,48 @@ def render(time: str = None, month: int = None) -> html.Div:
                             highlight=False,
                         ),
                         metric_card(
-                            "🧤",
+                            html.Img(
+                                src="https://i.ibb.co/YTyHnVKT/goleiro.png",
+                                style={
+                                    "width": "32px",
+                                    "height": "32px",
+                                    "objectFit": "contain",
+                                },
+                            ),
                             f"{stats['melhor_goleiro']['defesas']}",
                             f"Melhor Goleiro: {stats['melhor_goleiro']['nome']}",
                             highlight=True,
                         ),
                     ],
                 ),
+                # Cards dinâmicos - Total de jogadores
+                html.Div(
+                    className="metrics-grid two-columns",
+                    children=[
+                        # Jogadores de Campo
+                        metric_card(
+                            "👥",
+                            f"{total_jogadores}",
+                            "Jogadores de Campo",
+                            highlight=False,
+                            icon_class="jogadores-campo",
+                            card_class="jogadores-campo",
+                        ),
+                        # Goleiros
+                        metric_card(
+                            "🧤",
+                            f"{total_goleiros}",
+                            "Goleiros",
+                            highlight=False,
+                            icon_class="goleiros",
+                            card_class="goleiros",
+                        ),
+                    ],
+                ),
                 # Gráficos de rosca (lado a lado)
                 html.Div(
                     className="charts-grid",
+                    style={"margin-top": "40px"},
                     children=[
                         html.Div(
                             className="chart-card",

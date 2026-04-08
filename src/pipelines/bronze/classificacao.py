@@ -3,10 +3,14 @@
 from pathlib import Path
 
 import pandas as pd
+from rich.console import Console
+from rich.table import Table
 
 from src.pipelines.bronze.base import BasePipeline
 from src.configs import settings
 from src.utils.logger import logger
+
+console = Console()
 
 
 class ClassificacaoBronzePipeline(BasePipeline):
@@ -123,15 +127,54 @@ class ClassificacaoBronzePipeline(BasePipeline):
 
             df = pd.DataFrame(dados)
 
-            # Mostrar tabela
-            logger.info("TABELA BRASILEIRAO 2026")
+            # Mostrar tabela com Rich
+            table = Table(
+                title="[bold green]📊 CLASSIFICAÇÃO BRASILEIRÃO 2026 - DADOS CRUS (BRONZE)[/bold green]",
+                show_header=True,
+                header_style="bold magenta",
+            )
 
+            # Adicionar colunas
+            table.add_column("Pos", style="cyan", justify="center", width=4)
+            table.add_column("Time", style="green", width=20)
+            table.add_column("J", style="white", justify="center", width=3)
+            table.add_column("V", style="yellow", justify="center", width=3)
+            table.add_column("E", style="blue", justify="center", width=3)
+            table.add_column("D", style="red", justify="center", width=3)
+            table.add_column("GP", style="white", justify="center", width=4)
+            table.add_column("GC", style="white", justify="center", width=4)
+            table.add_column("SG", style="white", justify="center", width=4)
+            table.add_column("PTS", style="bold yellow", justify="center", width=5)
+
+            # Adicionar linhas
             for _, row in df.iterrows():
-                logger.info(
-                    f"Pos: {row['Posição']:2d} | Time: {row['Time'][:18]:18s} | J: {row['J']:2d} | V: {row['V']:2d} | E: {row['E']:2d} | D: {row['D']:2d} | GP: {row['GP']:3d} | GC: {row['GC']:3d} | SG: {row['SG']:+3d} | PTS: {row['PTS']:3d}"
+                # Colorir posições especiais
+                if row["Posição"] <= 4:
+                    pos_style = "bold green"  # Libertadores
+                elif row["Posição"] <= 12:
+                    pos_style = "bold cyan"  # Sul-americana
+                elif row["Posição"] >= 17:
+                    pos_style = "bold red"  # Rebaixados
+                else:
+                    pos_style = "white"
+
+                table.add_row(
+                    f"[{pos_style}]{row['Posição']}[/{pos_style}]",
+                    row["Time"][:20],
+                    str(row["J"]),
+                    str(row["V"]),
+                    str(row["E"]),
+                    str(row["D"]),
+                    str(row["GP"]),
+                    str(row["GC"]),
+                    f"{row['SG']:+d}",
+                    str(row["PTS"]),
                 )
 
-            logger.info(f"Mostrando {len(df)} times")
+            console.print(table)
+            console.print(
+                f"[bold]Total:[/bold] [cyan]{len(df)}[/cyan] times (dados brutos)"
+            )
 
             return df
 

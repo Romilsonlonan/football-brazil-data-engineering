@@ -49,7 +49,10 @@ with DAG(
     Esta DAG pode ser executada manualmente ou em conjunto com a DAG Silver.
     """
 
-    @task(task_id="run_gold_carga", retries=2)
+    @task(
+        task_id="run_gold_carga",
+        retries=2,
+    )
     def run_gold_carga() -> dict:
         """Executa o pipeline Gold de carga de classificação."""
         import sys
@@ -71,7 +74,9 @@ with DAG(
 
         return result
 
-    @task(task_id="verify_superset_data")
+    @task(
+        task_id="verify_superset_data",
+    )
     def verify_superset_data(result: dict) -> dict:
         """Verifica se os dados foram corretamente inseridos no PostgreSQL.
 

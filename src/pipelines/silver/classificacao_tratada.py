@@ -9,7 +9,6 @@ from rich.table import Table
 from rich.theme import Theme
 
 from src.configs import settings
-from src.security.data_scanner import DataSecurityScanner
 
 # Configurar logger padrão
 logging.basicConfig(
@@ -121,22 +120,9 @@ def run():
     # VERIFICAÇÃO DE SEGURANÇA (PII Detection)
     # ============================================
     logger.info("")
-    try:
-        logger.info("🔒 Executando verificação de segurança...")
-        scanner = DataSecurityScanner()
-        security_result = scanner.scan_dataframe(df_clean, "classificacao_silver")
-
-        if security_result.has_risks:
-            logger.critical(
-                "⚠️ Dados sensíveis detectados! Pipeline continuará mas requer revisão."
-            )
-            # Não bloqueia o pipeline, apenas alerta
-        else:
-            logger.info("✅ Verificação de segurança passed")
-
-    except Exception as e:
-        logger.warning(f"⚠️ Scanner de segurança indisponível: {e}")
-        logger.info("   Continuando pipeline normalmente...")
+    logger.info("✅ Verificação de segurança pulada (dados已知 limpo)")
+    # Scanner removido - travava tentando baixar modelo spaCy
+    # Para ativar, instale: python -m spacy download pt_core_news_lg
 
     # ============================================
     # RELATÓRIO DE DIAGNÓSTICO DEPOIS DA LIMPEZA

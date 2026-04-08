@@ -29,23 +29,29 @@ def bar_chart(df: DataFrame, time: str = "Todos") -> go.Figure:
             barmode="stack",
         )
     else:
-        row = df[df["time"].str.contains(time, case=False)].iloc[0]
+        df_filtered = df[df["time"].str.contains(time, case=False, na=False)]
+        if df_filtered.empty:
+            return go.Figure()
+        row = df_filtered.iloc[0]
+        # Convert numpy types to native Python
+        vitorias = int(row["vitorias"])
+        empates = int(row["empates"])
+        derrotas = int(row["derrotas"])
         fig = go.Figure(
             data=[
                 go.Bar(
                     x=["Vitórias", "Empates", "Derrotas"],
-                    y=[row["vitorias"], row["empates"], row["derrotas"]],
+                    y=[vitorias, empates, derrotas],
                     marker_color=[
                         COLORS["success"],
                         COLORS["warning"],
                         COLORS["danger"],
                     ],
-                    text=[row["vitorias"], row["empates"], row["derrotas"]],
+                    text=[vitorias, empates, derrotas],
                     textposition="outside",
                 )
             ]
         )
-        fig.update_layout(title=f"📊 {time} - Desempenho")
 
     fig.update_layout(
         template="plotly_dark",
@@ -113,10 +119,10 @@ def g4_donut(df: DataFrame) -> go.Figure:
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.1,
+            y=-0.25,
             xanchor="center",
             x=0.5,
-            font=dict(color="white"),
+            font=dict(color="white", size=11),
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -172,3 +178,98 @@ def top10_bar(df: DataFrame, filtro: str = "all") -> tuple[go.Figure, str]:
         showlegend=False,
     )
     return fig, titulo
+
+
+def create_zone_probability_chart(posicao: int, df: DataFrame) -> go.Figure:
+    """Cria gráfico de rosca com probabilidade de zonas."""
+    if posicao < 1 or posicao > 20:
+        return go.Figure()
+    jogos_disputados = df["jogos"].max() if "jogos" in df.columns else 10
+    jogos_restantes = max(0, 38 - jogos_disputados)
+
+    # Calcular pontos atuais e possíveis
+    pontos_atuais = (
+        df[df["time"].str.contains("Athletico Paranaense", case=False, na=False)][
+            "pontos"
+        ].iloc[0]
+        if not df[
+            df["time"].str.contains("Athletico Paranaense", case=False, na=False)
+        ].empty
+        else 0
+    )
+    pontos_maximos = pontos_atuais + (jogos_restantes * 3)
+
+    # Porcentagem teórica baseada na posição
+    total_times = len(df)
+    pct = 100 / total_times
+
+    zonas = {
+        "G4": pct * 4 if posicao <= 4 else pct * (posicao - 4),
+        "G6": pct * 6 if posicao <= 6 else pct * (posicao - 6),
+        "G14": pct * 14 if posicao <= 14 else pct * (posicao - 14),
+        "Z4": pct * 4 if posicao >= 17 else 0,
+    }
+
+    labels = []
+    values = []
+    colors = []
+    percentages = []
+
+    for zona, pct_zona in zonas.items():
+        pct_val = max(0, pct_zona)
+        values.append(pct_val)
+        percentages.append(f"{pct_val:.0f}%")
+
+        if zona == "G4":
+            colors.append("#3fb950")
+            labels.append(
+                f"G4: {'✅ Garantido' if posicao <= 4 else f'{pct_val:.0f}%'}"
+            )
+        elif zona == "G6":
+            colors.append("#58a6ff")
+            labels.append(
+                f"G6: {'✅ Garantido' if posicao <= 6 else f'{pct_val:.0f}%'}"
+            )
+        elif zona == "G14":
+            colors.append("#8957e5")
+            labels.append(
+                f"G14: {'✅ Garantido' if posicao <= 14 else f'{pct_val:.0f}%'}"
+            )
+        elif zona == "Z4":
+            colors.append("#f85149")
+            labels.append(
+                f"Z4: {'⚠️ Rebaixado' if posicao >= 17 else f'{pct_val:.0f}%'}"
+            )
+        else:
+            colors.append("#6e7681")
+            labels.append(f"{zona}: {pct_val:.0f}%")
+
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.5,
+                marker=dict(colors=colors),
+                textinfo="percent",
+                textposition="outside",
+                textfont=dict(color="white", size=12),
+            )
+        ]
+    )
+    fig.update_layout(
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.35,
+            xanchor="center",
+            x=0.5,
+            font=dict(color="white", size=11),
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(t=20, b=100, l=20, r=20),
+        height=350,
+    )
+    return fig

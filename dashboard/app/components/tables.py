@@ -13,27 +13,42 @@ def classification_table(df: DataFrame) -> html.Table:
         else:
             badge = "posicao-normal"
 
-        rows.append(html.Tr([
-            html.Td(html.Span(str(pos), className=f"posicao-badge {badge}")),
-            html.Td(row["time"]),
-            html.Td(str(int(row["jogos"]))),
-            html.Td(str(int(row["vitorias"]))),
-            html.Td(str(int(row["empates"]))),
-            html.Td(str(int(row["derrotas"]))),
-            html.Td(str(int(row["gols_pro"]))),
-            html.Td(str(int(row["gols_contra"]))),
-            html.Td(str(int(row["saldo_gols"]))),
-            html.Td(str(int(row["pontos"]))),
-        ]))
+        rows.append(
+            html.Tr(
+                [
+                    html.Td(html.Span(str(pos), className=f"posicao-badge {badge}")),
+                    html.Td(row["time"]),
+                    html.Td(str(int(row["jogos"]))),
+                    html.Td(str(int(row["vitorias"]))),
+                    html.Td(str(int(row["empates"]))),
+                    html.Td(str(int(row["derrotas"]))),
+                    html.Td(str(int(row["gols_pro"]))),
+                    html.Td(str(int(row["gols_contra"]))),
+                    html.Td(str(int(row["saldo_gols"]))),
+                    html.Td(str(int(row["pontos"]))),
+                ]
+            )
+        )
 
     return html.Table(
         className="data-table",
         children=[
-            html.Thead(html.Tr([
-                html.Th("Pos"), html.Th("Time"), html.Th("J"),
-                html.Th("V"), html.Th("E"), html.Th("D"),
-                html.Th("GP"), html.Th("GC"), html.Th("SG"), html.Th("Pts"),
-            ])),
+            html.Thead(
+                html.Tr(
+                    [
+                        html.Th("Pos"),
+                        html.Th("Time"),
+                        html.Th("J"),
+                        html.Th("V"),
+                        html.Th("E"),
+                        html.Th("D"),
+                        html.Th("GP"),
+                        html.Th("GC"),
+                        html.Th("SG"),
+                        html.Th("Pts"),
+                    ]
+                )
+            ),
             html.Tbody(rows),
         ],
     )
@@ -57,12 +72,25 @@ def roster_table(df: DataFrame) -> html.Table:
     )
 
 
-def metric_card(icon: str, value: str, label: str, highlight: bool = False) -> html.Div:
-    cls = "metric-card highlight" if highlight else "metric-card"
+def metric_card(
+    icon,
+    value: str,
+    label: str,
+    highlight: bool = False,
+    icon_class: str = "",
+    card_class: str = "",
+) -> html.Div:
+    cls = f"metric-card {'highlight' if highlight else ''} {card_class}".strip()
+    icon_class_name = f"metric-icon {icon_class}".strip()
+    icon_element = (
+        html.Div(icon, className=icon_class_name)
+        if isinstance(icon, str)
+        else html.Div(icon, className=icon_class_name)
+    )
     return html.Div(
         className=cls,
         children=[
-            html.Div(icon, className="metric-icon"),
+            icon_element,
             html.Div(value, className="metric-value"),
             html.Div(label, className="metric-label"),
         ],
