@@ -90,9 +90,9 @@ class GoldCalendario:
         cols_ordem = [
             "time",
             "time_normalizado",
-            "data",
-            "jogo",
-            "hora",
+            "DATA",
+            "JOGO",
+            "HORA",
             "status",
             "mes",
             "ano",

@@ -19,29 +19,21 @@ class DashboardService:
     _elenco_cache: Optional[DataFrame] = None
     _calendario_cache: dict = {}
 
-    TIME_NAME_MAP = {
-        "Athletico-PR": "Athletico Paranaense",
-        "Atlético-MG": "Atlético Mineiro",
-        "Vasco da Gama": "Vasco",
-        "Red Bull Bragantino": "Bragantino",
-    }
-    """Mapeamento de nomes do bronze para nomes do gold."""
-
     @classmethod
     def normalize_team_for_search(cls, team: str) -> str:
         """Normaliza nome do time para busca em DataFrames gold."""
         if not team:
             return team
-        if team in cls.TIME_NAME_MAP:
-            return cls.TIME_NAME_MAP[team]
-        if "Athletico" in team and "Paranaense" not in team:
-            return "Athletico Paranaense"
-        if "Atlético" in team and "Mineiro" not in team:
-            return "Atlético Mineiro"
-        if "Vasco" in team:
-            return "Vasco"
-        if "Bragantino" in team:
-            return "Bragantino"
+
+        # Mapeamento: nome do dropdown → nome no DataFrame Gold
+        # O DataFrame Gold agora usa nomes completos do ESPN
+        reverse_map = {
+            "Vasco": "Vasco da Gama",
+            "Bragantino": "Red Bull Bragantino",
+        }
+
+        if team in reverse_map:
+            return reverse_map[team]
         return team
 
     @classmethod
@@ -54,7 +46,7 @@ class DashboardService:
     @classmethod
     def get_elenco_use_case(cls) -> BuscarElencoUseCase:
         if cls._elenco_use_case is None:
-            repo = ParquetRepository(get_bronze_data_path())
+            repo = ParquetRepository(get_data_path())
             cls._elenco_use_case = BuscarElencoUseCase(repo)
         return cls._elenco_use_case
 
@@ -92,10 +84,10 @@ class DashboardService:
             }
 
         df = df.copy()
-        df["G"] = pd.to_numeric(df["G"], errors="coerce").fillna(0)
-        df["CA"] = pd.to_numeric(df["CA"], errors="coerce").fillna(0)
-        df["CV"] = pd.to_numeric(df["CV"], errors="coerce").fillna(0)
-        df["D"] = pd.to_numeric(df["D"], errors="coerce").fillna(0)
+        # Colunas corretas do gold: Nome, Time, POS (não Posição), G, CA, CV
+        df["G"] = pd.to_numeric(df.get("G", 0), errors="coerce").fillna(0)
+        df["CA"] = pd.to_numeric(df.get("CA", 0), errors="coerce").fillna(0)
+        df["CV"] = pd.to_numeric(df.get("CV", 0), errors="coerce").fillna(0)
 
         if month and "mes" in df.columns:
             df = df[df["mes"] <= month]
@@ -106,10 +98,9 @@ class DashboardService:
         artilheiro = df.loc[df["G"].idxmax()] if not df.empty else None
         total_ca = int(df["CA"].sum())
         total_cv = int(df["CV"].sum())
-        goleiros = df[df["Posição"] == "Goleiro"]
-        melhor_goleiro = (
-            goleiros.loc[goleiros["D"].idxmax()] if not goleiros.empty else None
-        )
+
+        # Jogadores de campo (não goleiros) - POS = D, M, A
+        jogadores_campo = df[df["POS"].isin(["D", "M", "A"])]
 
         return {
             "artilheiro": {
@@ -119,13 +110,7 @@ class DashboardService:
             },
             "cartoes_amarelos": {"total": total_ca},
             "cartoes_vermelhos": {"total": total_cv},
-            "melhor_goleiro": {
-                "nome": melhor_goleiro["Nome"] if melhor_goleiro is not None else "-",
-                "time": melhor_goleiro["Time"] if melhor_goleiro is not None else "-",
-                "defesas": int(melhor_goleiro["D"])
-                if melhor_goleiro is not None
-                else 0,
-            },
+            "melhor_goleiro": {"nome": "-", "defesas": 0},
         }
 
     @classmethod

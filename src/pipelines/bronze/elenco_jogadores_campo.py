@@ -20,10 +20,10 @@ from src.configs import settings
 from src.utils.logger import logger
 
 
-# URLs dos times do Brasileirao 2026
+# URLs dos times do Brasileao 2026 (usar nomes completos do site ESPN)
 TEAMS_URLS = {
-    "Athletico-PR": "https://www.espn.com.br/futebol/time/elenco/_/id/3458",
-    "Atlético-MG": "https://www.espn.com.br/futebol/time/elenco/_/id/7632",
+    "Athletico Paranaense": "https://www.espn.com.br/futebol/time/elenco/_/id/3458",
+    "Atlético Mineiro": "https://www.espn.com.br/futebol/time/elenco/_/id/7632",
     "Bahia": "https://www.espn.com.br/futebol/time/elenco/_/id/9967",
     "Botafogo": "https://www.espn.com.br/futebol/time/elenco/_/id/6086",
     "Chapecoense": "https://www.espn.com.br/futebol/time/elenco/_/id/9318",
@@ -66,9 +66,14 @@ class ElencoJogadoresCampoBronzePipeline(BasePipeline):
             try:
                 response = requests.get(url, headers=self.headers, timeout=30)
                 return response
-            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as e:
                 wait_time = self.retry_delay * (2**attempt)
-                logger.warning(f"Tentativa {attempt + 1}/{self.max_retries} falhou: {e}. Esperando {wait_time}s...")
+                logger.warning(
+                    f"Tentativa {attempt + 1}/{self.max_retries} falhou: {e}. Esperando {wait_time}s..."
+                )
                 time.sleep(wait_time)
         raise requests.RequestException(f"Falha apos {self.max_retries} tentativas")
 
@@ -177,9 +182,13 @@ class ElencoJogadoresCampoBronzePipeline(BasePipeline):
         """Extrai dados dos jogadores de campo da ESPN."""
         console = Console(force_terminal=True, file=sys.stdout)
 
-        console.print("\n[bold cyan]==============================================[/bold cyan]")
+        console.print(
+            "\n[bold cyan]==============================================[/bold cyan]"
+        )
         console.print("[bold cyan]  JOGADORES DE CAMPO - BRASILEIRAO 2026[/bold cyan]")
-        console.print("[bold cyan]==============================================[/bold cyan]")
+        console.print(
+            "[bold cyan]==============================================[/bold cyan]"
+        )
         console.print("[dim]Dados extraidos da ESPN - Camada Bronze[/dim]\n")
 
         logger.info("=" * 60)
@@ -208,7 +217,9 @@ class ElencoJogadoresCampoBronzePipeline(BasePipeline):
                 all_players.extend(jogadores)
                 team_data[team_name] = jogadores
 
-                logger.info(f"✅ {team_name}: {len(jogadores)} jogadores de campo extraidos")
+                logger.info(
+                    f"✅ {team_name}: {len(jogadores)} jogadores de campo extraidos"
+                )
 
                 time.sleep(2)
 
@@ -227,11 +238,17 @@ class ElencoJogadoresCampoBronzePipeline(BasePipeline):
         df = pd.DataFrame(all_players)
 
         # Resumo final
-        console.print("\n[bold green]==============================================[/bold green]")
+        console.print(
+            "\n[bold green]==============================================[/bold green]"
+        )
         console.print("[bold green]  Extracao Concluida[/bold green]")
         console.print(f"[green]Total de jogadores: {len(df)}[/green]")
-        console.print(f"[cyan]Times processados: {len(team_data)}/{len(TEAMS_URLS)}[/cyan]")
-        console.print("[bold green]==============================================[/bold green]\n")
+        console.print(
+            f"[cyan]Times processados: {len(team_data)}/{len(TEAMS_URLS)}[/cyan]"
+        )
+        console.print(
+            "[bold green]==============================================[/bold green]\n"
+        )
 
         logger.info(f"Total de jogadores de campo extraidos: {len(df)}")
         return df

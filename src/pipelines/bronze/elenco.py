@@ -14,8 +14,8 @@ from src.utils.logger import logger
 
 # URLs dos times do Brasileirão 2026 - IDs obtidos da API ESPN (20 times)
 TEAMS_URLS = {
-    "Athletico-PR": "https://www.espn.com.br/futebol/time/elenco/_/id/3458",
-    "Atlético-MG": "https://www.espn.com.br/futebol/time/elenco/_/id/7632",
+    "Athletico Paranaense": "https://www.espn.com.br/futebol/time/elenco/_/id/3458",
+    "Atlético Mineiro": "https://www.espn.com.br/futebol/time/elenco/_/id/7632",
     "Bahia": "https://www.espn.com.br/futebol/time/elenco/_/id/9967",
     "Botafogo": "https://www.espn.com.br/futebol/time/elenco/_/id/6086",
     "Chapecoense": "https://www.espn.com.br/futebol/time/elenco/_/id/9318",

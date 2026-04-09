@@ -1,61 +1,37 @@
 """Repositório para ler dados do arquivo Parquet (classificação com vagas).
 
-Este repositório lê dados do arquivo gold/classificacao-vagas.parquet.
+Este repositório lê dados do arquivo gold/classificacao-vagas.parquet do MinIO.
 """
 
 import pandas as pd
-from pathlib import Path
 from typing import List, Optional
-
-import os
 
 from src.api.domain.entities.classificacao_vagas import ClassificacaoVagas
 from src.api.domain.entities.time import Time
 from src.api.domain.repositories.interface import IClassificacaoRepository
+from src.api.infrastructure.repositories.minio_mixin import MinIODataFrameMixin
 
 
-class ParquetClassificacaoVagasRepository(IClassificacaoRepository):
-    """Repositório que lê dados do arquivo Parquet Gold com vagas."""
+class ParquetClassificacaoVagasRepository(
+    IClassificacaoRepository, MinIODataFrameMixin
+):
+    """Repositório que lê dados do arquivo Parquet Gold com vagas do MinIO."""
 
-    def __init__(self, parquet_path: Optional[Path] = None):
+    def __init__(self, parquet_path: Optional[str] = None):
         """
         Inicializa o repositório.
 
         Args:
-            parquet_path: Caminho para o arquivo parquet.
-                          Se None, usa o caminho padrão.
+            parquet_path: Caminho para o arquivo parquet (descontinuado, usa MinIO).
         """
-        if parquet_path is None:
-            # Caminho padrão para o arquivo gold com vagas
-            data_path = os.environ.get("DATA_PATH", "/app/data")
-            parquet_path = Path(f"{data_path}/gold/classificacao-vagas.parquet")
-
-        self._parquet_path = parquet_path
+        self._folder = "gold"
+        self._filename = "classificacao-vagas.parquet"
         self._df: Optional[pd.DataFrame] = None
 
     def _load_data(self) -> pd.DataFrame:
-        """Carrega os dados do arquivo parquet."""
+        """Carrega os dados do MinIO."""
         if self._df is None:
-            if self._parquet_path.exists():
-                self._df = pd.read_parquet(self._parquet_path)
-            else:
-                # Retorna DataFrame vazio se arquivo não existir
-                self._df = pd.DataFrame(
-                    columns=[
-                        "posicao",
-                        "time",
-                        "jogos",
-                        "vitorias",
-                        "empates",
-                        "derrotas",
-                        "gols_pro",
-                        "gols_contra",
-                        "saldo_gols",
-                        "pontos",
-                        "zona",
-                        "status_curto",
-                    ]
-                )
+            self._df = self._load_from_minio(self._folder, self._filename)
         return self._df
 
     def _row_to_entity(
@@ -173,3 +149,15 @@ class ParquetClassificacaoVagasRepository(IClassificacaoRepository):
         filtered = df[df.get("zona", "").str.contains("REBAIXAMENTO")]
 
         return [self._row_to_entity(row, temporada) for _, row in filtered.iterrows()]
+
+    def get_times_rebaixados(
+        self, temporada: Optional[str] = None
+    ) -> List[ClassificacaoVagas]:
+        """Retorna os times na zona de rebaixamento."""
+        return self.get_rebaixados(temporada)
+
+    def get_times_liberadores(
+        self, temporada: Optional[str] = None
+    ) -> List[ClassificacaoVagas]:
+        """Retorna os times na zona de Libertadores."""
+        return self.get_libertadores(temporada)

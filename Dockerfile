@@ -42,7 +42,8 @@ RUN pip install --no-cache-dir --break-system-packages \
     pydantic-settings \
     beautifulsoup4 \
     pyarrow \
-    prometheus-client
+    prometheus-client \
+    minio
 
 # Copia código fonte
 COPY --chown=appuser:appgroup src/ ./src/

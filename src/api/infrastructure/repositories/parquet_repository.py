@@ -1,58 +1,33 @@
 """Repositório para ler dados do arquivo Parquet (silver-classificacao-tratado)."""
 
 import pandas as pd
-from pathlib import Path
 from typing import List, Optional
-
-import os
 
 from src.api.domain.entities.classificacao import Classificacao
 from src.api.domain.entities.time import Time
 from src.api.domain.entities.vagas import VagasConfig
 from src.api.domain.repositories.interface import IClassificacaoRepository
+from src.api.infrastructure.repositories.minio_mixin import MinIODataFrameMixin
 
 
-class ParquetClassificacaoRepository(IClassificacaoRepository):
-    """Repositório que lê dados do arquivo Parquet tratado."""
+class ParquetClassificacaoRepository(IClassificacaoRepository, MinIODataFrameMixin):
+    """Repositório que lê dados do arquivo Parquet tratado do MinIO."""
 
-    def __init__(self, parquet_path: Optional[Path] = None):
+    def __init__(self, parquet_path: Optional[str] = None):
         """
         Inicializa o repositório.
 
         Args:
-            parquet_path: Caminho para o arquivo parquet.
-                          Se None, usa o caminho padrão.
+            parquet_path: Caminho para o arquivo parquet (descontinuado, usa MinIO).
         """
-        if parquet_path is None:
-            # Caminho padrão para o arquivo silver tratado
-            # Usa variável de ambiente DATA_PATH ou padrão /app/data
-            data_path = os.environ.get("DATA_PATH", "/app/data")
-            parquet_path = Path(f"{data_path}/silver/classificacao-limpa.parquet")
-
-        self._parquet_path = parquet_path
+        self._folder = "silver"
+        self._filename = "classificacao-limpa.parquet"
         self._df: Optional[pd.DataFrame] = None
 
     def _load_data(self) -> pd.DataFrame:
-        """Carrega os dados do arquivo parquet."""
+        """Carrega os dados do MinIO."""
         if self._df is None:
-            if self._parquet_path.exists():
-                self._df = pd.read_parquet(self._parquet_path)
-            else:
-                # Retorna DataFrame vazio se arquivo não existir
-                self._df = pd.DataFrame(
-                    columns=[
-                        "Posição",
-                        "Time",
-                        "J",
-                        "V",
-                        "E",
-                        "D",
-                        "GP",
-                        "GC",
-                        "SG",
-                        "PTS",
-                    ]
-                )
+            self._df = self._load_from_minio(self._folder, self._filename)
         return self._df
 
     def _row_to_entity(

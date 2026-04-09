@@ -1,4 +1,5 @@
 """Implementação do repositório de dados Parquet - Infrastructure Layer"""
+
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,8 @@ class ParquetRepository(ClassificacaoRepository, ElencoRepository):
         self._data_path = Path(data_path)
         self._classificacao_path = self._data_path / "classificacao.parquet"
         self._elenco_path = self._data_path / "classificacao-vagas.parquet"
-        self._bronze_elenco_path = Path("data/bronze/elenco.parquet")
+        self._elenco_jogadores_path = self._data_path / "elenco_jogadores_campo.parquet"
+        self._elenco_goleiros_path = self._data_path / "elenco_goleiros.parquet"
 
     @staticmethod
     def _parse_idade(valor: Any) -> int | None:
@@ -70,7 +72,7 @@ class ParquetRepository(ClassificacaoRepository, ElencoRepository):
             Jogador(
                 nome=row["Nome"],
                 time=row["Time"],
-                posicao=row["Posição"],
+                posicao=row["POS"],
                 idade=self._parse_idade(row.get("Idade")),
                 nacionalidade=row.get("NAC"),
             )
@@ -84,7 +86,7 @@ class ParquetRepository(ClassificacaoRepository, ElencoRepository):
             Jogador(
                 nome=row["Nome"],
                 time=row["Time"],
-                posicao=row["Posição"],
+                posicao=row["POS"],
                 idade=self._parse_idade(row.get("Idade")),
                 nacionalidade=row.get("NAC"),
             )
@@ -95,8 +97,11 @@ class ParquetRepository(ClassificacaoRepository, ElencoRepository):
 
     def get_elenco_dataframe(self) -> pd.DataFrame:
         """Retorna o elenco como DataFrame."""
-        if not self._bronze_elenco_path.exists():
+        if self._elenco_jogadores_path.exists():
+            return pd.read_parquet(self._elenco_jogadores_path)
+        elif self._elenco_path.exists():
+            return pd.read_parquet(self._elenco_path)
+        else:
             raise FileNotFoundError(
-                f"Arquivo de elenco não encontrado em: {self._bronze_elenco_path}"
+                f"Arquivo de elenco não encontrado em: {self._elenco_jogadores_path}"
             )
-        return pd.read_parquet(self._bronze_elenco_path)

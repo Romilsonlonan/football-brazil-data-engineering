@@ -216,9 +216,22 @@ def _create_table(df: DataFrame) -> html.Div:
 
 def _create_yellow_cards_donut(df: DataFrame) -> go.Figure:
     """Cria gráfico de rosca para cartões amarelos."""
-    if df.empty:
+    if df.empty or df["CA"].sum() == 0:
         fig = go.Figure()
-        fig.update_layout(title="Sem dados")
+        fig.add_annotation(
+            text="Nenhum cartão amarelo no momento",
+            x=0.5,
+            y=0.5,
+            font=dict(size=14, color="gray"),
+            showarrow=False,
+        )
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=300,
+            margin=dict(l=20, r=20, t=50, b=20),
+        )
         return fig
 
     # Cores para os 4 primeiros
@@ -253,9 +266,26 @@ def _create_yellow_cards_donut(df: DataFrame) -> go.Figure:
 
 def _create_red_cards_donut(df: DataFrame) -> go.Figure:
     """Cria gráfico de rosca para cartões vermelhos."""
-    if df.empty:
+    if df.empty or df["CV"].sum() == 0:
         fig = go.Figure()
-        fig.update_layout(title="Sem dados")
+        fig.add_annotation(
+            text="Nenhum cartão vermelho no momento",
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            xanchor="center",
+            yanchor="middle",
+            font=dict(size=14, color="gray"),
+            showarrow=False,
+        )
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=300,
+            margin=dict(l=20, r=20, t=50, b=20),
+        )
         return fig
 
     # Cores para os 4 primeiros

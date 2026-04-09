@@ -9,8 +9,8 @@ from pathlib import Path
 BRONZE_PATH = "data/bronze"
 
 TIME_ESPN_LINKS = {
-    "Athletico-PR": "https://www.espn.com.br/futebol/time/calendario/_/id/3458",
-    "Atlético-MG": "https://www.espn.com.br/futebol/time/calendario/_/id/7632",
+    "Athletico Paranaense": "https://www.espn.com.br/futebol/time/calendario/_/id/3458",
+    "Atlético Mineiro": "https://www.espn.com.br/futebol/time/calendario/_/id/7632",
     "Bahia": "https://www.espn.com.br/futebol/time/calendario/_/id/9967",
     "Botafogo": "https://www.espn.com.br/futebol/time/calendario/_/id/6086",
     "Chapecoense": "https://www.espn.com.br/futebol/time/calendario/_/id/9318",

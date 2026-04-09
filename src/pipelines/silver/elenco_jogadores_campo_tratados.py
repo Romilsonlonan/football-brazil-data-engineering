@@ -38,9 +38,13 @@ def check_data_quality(df: pd.DataFrame) -> dict:
 
 def run():
     """Executa o pipeline Silver de tratamento de jogadores de campo."""
-    console.print("\n[bold cyan]==============================================[/bold cyan]")
+    console.print(
+        "\n[bold cyan]==============================================[/bold cyan]"
+    )
     console.print("[bold cyan]  JOGADORES DE CAMPO - CAMADA SILVER[/bold cyan]")
-    console.print("[bold cyan]==============================================[/bold cyan]")
+    console.print(
+        "[bold cyan]==============================================[/bold cyan]"
+    )
     console.print("[dim]Limpeza e tratamento de dados[/dim]\n")
 
     logger.info("=" * 60)
@@ -65,7 +69,9 @@ def run():
     console.print(f"Total de registros: [green]{len(df)}[/green]")
 
     # 2. Verificacao de dados Problematicos ANTES do tratamento
-    console.print("\n[bold red]==============================================[/bold red]")
+    console.print(
+        "\n[bold red]==============================================[/bold red]"
+    )
     console.print("[bold red]  VERIFICACAO ANTES DO TRATAMENTO[/bold red]")
     console.print("[bold red]==============================================[/bold red]")
 
@@ -74,7 +80,13 @@ def run():
     # Identificar registros com problemas ANTES do tratamento
     has_problem = pd.Series([False] * len(df), index=df.index)
     for col in df.columns:
-        has_problem = has_problem | df[col].isnull() | (df[col] == "") | (df[col] == "-") | (df[col] == "--")
+        has_problem = (
+            has_problem
+            | df[col].isnull()
+            | (df[col] == "")
+            | (df[col] == "-")
+            | (df[col] == "--")
+        )
 
     problem_rows_before = df[has_problem].copy()
     problem_indices = problem_rows_before.index.tolist()
@@ -100,7 +112,9 @@ def run():
             )
 
         console.print(problem_table)
-        console.print(f"\n[red]Total de registros com problemas: {len(problem_rows_before)}[/red]")
+        console.print(
+            f"\n[red]Total de registros com problemas: {len(problem_rows_before)}[/red]"
+        )
     else:
         console.print("[green]Nenhum problema encontrado![/green]")
 
@@ -108,7 +122,22 @@ def run():
     console.print("\n[bold yellow]Aplicando tratamentos...[/bold yellow]")
 
     # Colunas numericas que devem ser substituidas por 0
-    numeric_cols = ["POS", "Idade", "Alt", "P", "J", "SUB", "G", "A", "TC", "CG", "FC", "FS", "CA", "CV"]
+    # OBS: POS (posição) NAO deve ser convertida para numero - manter como texto (D, M, A)
+    numeric_cols = [
+        "Idade",
+        "Alt",
+        "P",
+        "J",
+        "SUB",
+        "G",
+        "A",
+        "TC",
+        "CG",
+        "FC",
+        "FS",
+        "CA",
+        "CV",
+    ]
 
     for col in numeric_cols:
         if col in df.columns:
@@ -116,6 +145,17 @@ def run():
             df[col] = df[col].replace("", 0)
             df[col] = df[col].replace("-", 0)
             df[col] = df[col].replace("--", 0)
+            # Tratar valores de string com zeros múltiples ou strings não numéricas
+            df[col] = df[col].apply(
+                lambda x: (
+                    0
+                    if (
+                        isinstance(x, str)
+                        and not x.replace("-", "").replace("0", "").isdigit()
+                    )
+                    else x
+                )
+            )
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
     # Colunas de texto - limpar caracteres especiais e ocultos
@@ -123,37 +163,61 @@ def run():
 
     for col in text_cols:
         if col in df.columns:
+            # Substituir valores problemáticos antes de converter para string
+            df[col] = df[col].replace("--", "0")
+            df[col] = df[col].replace("-", "0")
+            df[col] = df[col].fillna("0")
             df[col] = df[col].astype(str)
-            df[col] = df[col].apply(lambda x: "".join(char for char in x if ord(char) >= 32 or char in "\n\t"))
+            df[col] = df[col].apply(
+                lambda x: "".join(
+                    char for char in x if ord(char) >= 32 or char in "\n\t"
+                )
+            )
             df[col] = df[col].str.strip()
-            df[col] = df[col].replace("nan", "")
-            df[col] = df[col].replace("None", "")
+            df[col] = df[col].replace("nan", "0")
+            df[col] = df[col].replace("None", "0")
 
     logger.info("Tratamentos aplicados com sucesso!")
 
     # 4. Verificacao DEPOIS do tratamento
-    console.print("\n[bold green]==============================================[/bold green]")
+    console.print(
+        "\n[bold green]==============================================[/bold green]"
+    )
     console.print("[bold green]  VERIFICACAO DEPOIS DO TRATAMENTO[/bold green]")
-    console.print("[bold green]==============================================[/bold green]")
+    console.print(
+        "[bold green]==============================================[/bold green]"
+    )
 
     issues_after = check_data_quality(df)
 
     if issues_after:
         console.print("\n[yellow]Ainda existem problemas:[/yellow]")
         for col, counts in issues_after.items():
-            console.print(f"  {col}: {counts['nulos']} nulos, {counts['vazios']} vazios, {counts['hifens']} hifens")
+            console.print(
+                f"  {col}: {counts['nulos']} nulos, {counts['vazios']} vazios, {counts['hifens']} hifens"
+            )
     else:
-        console.print("\n[bold green]✅ Todos os problemas foram corrigidos![/bold green]")
+        console.print(
+            "\n[bold green]✅ Todos os problemas foram corrigidos![/bold green]"
+        )
         console.print("[green]Nenhum dado nulo, vazio ou hifen encontrado.[/green]")
 
     # 5. Mostrar ANTES e DEPOIS das mesmas linhas corrigidas
     if len(problem_indices) > 0:
-        console.print("\n[bold magenta]==============================================[/bold magenta]")
-        console.print("[bold magenta]  ANTES E DEPOIS - LINHAS CORRIGIDAS[/bold magenta]")
-        console.print("[bold magenta]==============================================[/bold magenta]")
+        console.print(
+            "\n[bold magenta]==============================================[/bold magenta]"
+        )
+        console.print(
+            "[bold magenta]  ANTES E DEPOIS - LINHAS CORRIGIDAS[/bold magenta]"
+        )
+        console.print(
+            "[bold magenta]==============================================[/bold magenta]"
+        )
 
         console.print("\n[red]ANTES (com problemas):[/red]")
-        console.print("[yellow]OBS: Valores com '--', '-', vazio ou nulo serao mostrados[/yellow]")
+        console.print(
+            "[yellow]OBS: Valores com '--', '-', vazio ou nulo serao mostrados[/yellow]"
+        )
 
         before_table = Table()
         before_table.add_column("Nome", style="red")
@@ -184,7 +248,9 @@ def run():
         console.print(before_table)
 
         console.print("\n[green]DEPOIS (corrigidos):[/green]")
-        console.print("[cyan]OBS: Valores '--', '-', vazio ou nulo foram substituidos por 0[/cyan]")
+        console.print(
+            "[cyan]OBS: Valores '--', '-', vazio ou nulo foram substituidos por 0[/cyan]"
+        )
 
         after_table = Table()
         after_table.add_column("Nome", style="green")
@@ -247,11 +313,15 @@ def run():
     df.to_parquet(silver_path, index=False)
     logger.info(f"Dados salvos em: {silver_path}")
 
-    console.print("\n[bold green]==============================================[/bold green]")
+    console.print(
+        "\n[bold green]==============================================[/bold green]"
+    )
     console.print("[bold green]  Pipeline Silver Concluido[/bold green]")
     console.print(f"Total de jogadores: [green]{len(df)}[/green]")
     console.print(f"Arquivo salvo em: [cyan]{silver_path}[/cyan]")
-    console.print("[bold green]==============================================[/bold green]\n")
+    console.print(
+        "[bold green]==============================================[/bold green]\n"
+    )
 
     return silver_path
 
