@@ -16,7 +16,7 @@ Moving beyond traditional data warehousing, this architecture implements a moder
 
 ## 🏗️ Architecture
 
-<img src="https://i.ibb.co/fGDyBVVS/architecture.png" alt="System Architecture" width="100%">
+<img src="https://i.ibb.co/fGDyBVVS/architecture.png" alt="System Architecture" width="50%">
 
 The data flows through a structured pipeline to ensure maximum reliability:
 
