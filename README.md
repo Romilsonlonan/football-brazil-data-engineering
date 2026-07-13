@@ -14,7 +14,9 @@ Moving beyond traditional data warehousing, this architecture implements a moder
 
 ---
 
-## 🏗️ Architecture: The Medallion Approach
+## 🏗️ Architecture
+
+![System Architecture](https://i.ibb.co/fGDyBVVS/architecture.png)
 
 The data flows through a structured pipeline to ensure maximum reliability:
 
