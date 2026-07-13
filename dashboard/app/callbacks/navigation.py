@@ -5,30 +5,84 @@ from dash.exceptions import PreventUpdate
 from dashboard.app.services import DashboardService
 from dashboard.app.pages import dashboard, classificacao, elenco, calendario
 
-
 def register(app: Dash) -> None:
     from dash import callback_context
+
+    # ============================================================
+    # Callback: Reset filters and refresh data
+    # ============================================================
+    @app.callback(
+        [
+            Output("page-selector-store", "data", allow_duplicate=True),
+            Output("year-selector-store", "data", allow_duplicate=True),
+            Output("month-selector-store", "data", allow_duplicate=True),
+            Output("team-selector-store", "data", allow_duplicate=True),
+            Output("top10-selector-store", "data", allow_duplicate=True),
+            Output("page-selector-selected-label", "children", allow_duplicate=True),
+            Output("year-selector-selected-label", "children", allow_duplicate=True),
+            Output("month-selector-selected-label", "children", allow_duplicate=True),
+            Output("team-selector-selected-label", "children", allow_duplicate=True),
+            Output("top10-selector-selected-label", "children", allow_duplicate=True),
+            Output("refresh-ball", "className", allow_duplicate=True),
+        ],
+        Input("refresh-ball", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def reset_and_refresh(n_clicks):
+        if not n_clicks:
+            raise PreventUpdate
+
+        DashboardService.clear_cache()
+
+        # Reset values
+        new_page = "dashboard"
+        new_year = 2026
+        new_month = 4
+        new_team = ""
+        new_top10 = "all"
+        
+        new_page_label = "Dashboard"
+        new_year_label = "2026"
+        new_month_label = "Abril"
+        new_team_label = "Selecione um time..."
+        new_top10_label = "Todos os Times"
+        
+        return (
+            new_page,
+            new_year,
+            new_month,
+            new_team,
+            new_top10,
+            new_page_label,
+            new_year_label,
+            new_month_label,
+            new_team_label,
+            new_top10_label,
+            "sidebar-calendar-ball" # Removed spin
+        )
 
     # ============================================================
     # Callback: Controlar filtro de Time baseado na página
     # ============================================================
     @app.callback(
         [
-            Output("team-selector", "disabled"),
-            Output("top10-selector", "disabled"),
-            Output("team-selector", "value"),
-            Output("month-selector", "disabled"),
+            Output("team-selector", "style"),
+            Output("top10-selector", "style"),
+            Output("month-selector", "style"),
         ],
         Input("page-selector", "value"),
     )
-    def update_filters_disabled(page: str) -> tuple[bool, bool, str, bool]:
-        """Desabilita filtros específicos conforme a página"""
+    def update_filters_visibility(page: str) -> tuple[dict, dict, dict]:
+        """Esconde filtros específicos conforme a página"""
+        hidden = {"display": "none"}
+        visible = {"display": "block"}
+
         if page == "classificacao":
-            return False, False, "", False
+            return visible, visible, visible
         elif page == "elenco":
-            return False, True, "", False
+            return visible, hidden, visible
         else:
-            return False, False, "", True
+            return visible, visible, hidden
 
     # ============================================================
     # Callback: Controlar botões de zona na bike image
@@ -41,7 +95,7 @@ def register(app: Dash) -> None:
             Output("zone-g6", "className"),
             Output("zone-g12", "className"),
             Output("zone-z4", "className"),
-            Output("top10-selector", "value"),
+            Output("top10-selector-store", "data", allow_duplicate=True),
         ],
         [
             Input("zone-t10", "n_clicks"),
@@ -51,7 +105,8 @@ def register(app: Dash) -> None:
             Input("zone-g12", "n_clicks"),
             Input("zone-z4", "n_clicks"),
         ],
-        [State("top10-selector", "value")],
+        [State("top10-selector-store", "data")],
+        prevent_initial_call=True,
     )
     def update_zone_buttons(t10, b10, g4, g6, g12, z4, current_filter):
         ctx = callback_context
@@ -98,6 +153,9 @@ def register(app: Dash) -> None:
             selected_zone,
         )
 
+    # ============================================================
+    # Callback: Controle de Sidebar
+    # ============================================================
     @app.callback(
         [
             Output("sidebar", "className"),
@@ -129,60 +187,39 @@ def register(app: Dash) -> None:
             "sidebar-overlay visible",
         )
 
+    # ============================================================
+    # Callback: Atualizar Calendário na Sidebar
+    # ============================================================
     @app.callback(
         Output("sidebar-calendar", "children"),
         [
-            Input("team-selector", "value"),
-            Input("month-selector", "value"),
+            Input("team-selector-store", "data"),
+            Input("month-selector-store", "data"),
+            Input("year-selector-store", "data"),
         ],
     )
-    def update_sidebar_calendar(team: str, month: int) -> html.Div:
+    def update_sidebar_calendar(team: str, month: int, year: int) -> html.Div:
         from dashboard.app.pages import calendario
 
         team = team if team and team.strip() else None
         if not team:
             return html.Div(className="calendar-empty", children=[])
-        return calendario.render_sidebar(team, month)
+        return calendario.render_sidebar(team, month, year)
 
-    @app.callback(
-        [
-            Output("sidebar-calendar", "children", allow_duplicate=True),
-            Output("refresh-ball", "className", allow_duplicate=True),
-        ],
-        Input("refresh-ball", "n_clicks"),
-        [
-            State("team-selector", "value"),
-            State("month-selector", "value"),
-        ],
-        prevent_initial_call=True,
-    )
-    def refresh_data(n_clicks: int, team: str, month: int) -> tuple[html.Div, str]:
-        if not n_clicks or n_clicks == 0:
-            raise PreventUpdate
-
-        from dashboard.app.services import DashboardService
-        from dashboard.app.pages import calendario
-
-        DashboardService.clear_cache()
-
-        team = team if team and team.strip() else None
-        calendar_content = (
-            calendario.render_sidebar(team, month) if team else html.Div()
-        )
-
-        return calendar_content, "sidebar-calendar-ball spin"
-
+    # ============================================================
+    # Callback: Atualizar Conteúdo da Página
+    # ============================================================
     @app.callback(
         Output("page-content", "children"),
         [
-            Input("page-selector", "value"),
-            Input("team-selector", "value"),
-            Input("top10-selector", "value"),
-            Input("month-selector", "value"),
+            Input("page-selector-store", "data"),
+            Input("team-selector-store", "data"),
+            Input("top10-selector-store", "data"),
+            Input("year-selector-store", "data"),
+            Input("month-selector-store", "data"),
         ],
-        prevent_initial_call=True,
     )
-    def update_page(page: str, team: str, top10_filter: str, month: int) -> html.Div:
+    def update_page(page: str, team: str, top10_filter: str, year: int, month: int) -> html.Div:
         team = team if team and team.strip() else None
         top10_filter = top10_filter or "all"
 
@@ -205,7 +242,7 @@ def register(app: Dash) -> None:
             if page == "classificacao":
                 return classificacao.render(df, team, top10_filter)
             if page == "elenco":
-                return elenco.render(team, month)
+                return elenco.render(team, month, year)
 
             return html.Div()
         except Exception as e:

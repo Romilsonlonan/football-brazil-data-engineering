@@ -1,5 +1,4 @@
-"""Pipeline Silver - Calendário de Jogos (Limpeza e Transformação)"""
-
+import argparse
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
@@ -69,4 +68,8 @@ def run(month: int = 4, year: int = 2026) -> None:
 
 
 if __name__ == "__main__":
-    run(month=4, year=2026)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--month", type=int, default=4)
+    parser.add_argument("--year", type=int, default=2026)
+    args = parser.parse_args()
+    run(month=args.month, year=args.year)

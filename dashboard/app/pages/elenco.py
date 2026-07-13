@@ -6,7 +6,7 @@ from dashboard.app.components.tables import metric_card
 from dashboard.app.services import DashboardService
 
 
-def render(time: str = None, month: int = None) -> html.Div:
+def render(time: str = None, month: int = None, year: int = 2026) -> html.Div:
     """Renderiza a página de elenco com estatísticas do Campeonato."""
     try:
         stats = DashboardService.get_estatisticas_campeonato(month, time)

@@ -1,13 +1,19 @@
 """Main - Ponto de entrada da API."""
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
+import time
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from src.api.config import config
 from src.api.presentation.controllers.classificacao_controller import (
     ClassificacaoController,
 )
+
+# API Metrics
+REQUEST_COUNT = Counter("api_requests_total", "Total number of API requests", ["method", "endpoint", "http_status"])
+REQUEST_LATENCY = Histogram("api_request_duration_seconds", "Latency of API requests", ["method", "endpoint"])
 
 # Criar app FastAPI
 app = FastAPI(
@@ -24,6 +30,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if config.enable_metrics:
+    @app.middleware("http")
+    async def monitor_requests(request: Request, call_next):
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        process_time = time.perf_counter() - start_time
+        
+        method = request.method
+        endpoint = request.url.path
+        status_code = response.status_code
+        
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, http_status=status_code).inc()
+        REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(process_time)
+        
+        return response
+
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics():
+        """Endpoint para exportação de métricas do Prometheus."""
+        return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Instanciar controller

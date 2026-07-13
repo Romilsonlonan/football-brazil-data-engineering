@@ -32,23 +32,14 @@ dependencies = [
     # MinIO/S3
     "minio (>=7.0.0,<8.0.0)",
     "apache-airflow (>=3.2.0,<4.0.0)",
+    "playwright (>=1.58.0,<2.0.0)",
+    "prometheus-client (>=0.21.0,<0.22.0)",
+    "opentelemetry-api (>=1.27.0,<2.0.0)",
+    "opentelemetry-sdk (>=1.27.0,<2.0.0)",
+    "opentelemetry-exporter-otlp (>=1.27.0,<2.0.0)",
 ]
 
-[tool.poetry]
-package-mode = false
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
-dev = [
-    "pre-commit (>=3.0.0,<4.0.0)",
-    "ruff (>=0.15.6,<0.16.0)",
-    "pytest (>=9.0.2,<10.0.0)",
-    "pytest-cov (>=7.0.0,<8.0.0)",
-    "taskipy (>=1.14.1,<2.0.0)"
-]
 docs = [
     "mkdocs (>=1.6.1,<2.0.0)"
 ]

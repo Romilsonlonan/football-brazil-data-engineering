@@ -10,6 +10,7 @@ from dash import Dash, html
 from dashboard.app.services import DashboardService
 from dashboard.app.components.sidebar import sidebar
 from dashboard.app.callbacks.navigation import register
+from dashboard.app.callbacks.bottom_sheet import register as register_bottom_sheet
 
 _INDEX_STRING = """<!DOCTYPE html>
 <html>
@@ -186,6 +187,7 @@ def create_app(flask_server: Any = None, **kwargs) -> Dash:
     )
 
     register(app)
+    register_bottom_sheet(app)
     return app
 
 

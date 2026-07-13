@@ -1,5 +1,6 @@
 """Pipeline Bronze - Calendário de Jogos (ESPN)"""
 
+import argparse
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -30,7 +31,6 @@ TIME_ESPN_LINKS = {
     "Vasco da Gama": "https://www.espn.com.br/futebol/time/calendario/_/id/3454",
     "Vitória": "https://www.espn.com.br/futebol/time/calendario/_/id/3457",
 }
-
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
@@ -129,4 +129,9 @@ def run(month: int = 4, year: int = 2026) -> None:
 
 
 if __name__ == "__main__":
-    run(month=4, year=2026)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--month", type=int, default=4)
+    parser.add_argument("--year", type=int, default=2026)
+    args = parser.parse_args()
+    run(month=args.month, year=args.year)
+

@@ -2,10 +2,12 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
 from src.utils.logger import logger
+from src.pipelines.recovery.interfaces import RecoveryAgent, RecoveryResult
 
 
 class BasePipeline(ABC):
@@ -59,8 +61,12 @@ class BasePipeline(ABC):
         """
         pass
 
-    def run(self, **kwargs) -> Path:
-        """Execute the complete ETL pipeline.
+    def run(self, recovery_agent: Optional[RecoveryAgent] = None, **kwargs) -> Path:
+        """Execute the complete ETL pipeline with optional self-healing.
+
+        Args:
+            recovery_agent: Agent responsible for attempting to recover from errors.
+            **kwargs: Arguments passed to extract, transform, and load.
 
         Returns:
             Path to the saved output file.
@@ -69,14 +75,19 @@ class BasePipeline(ABC):
         logger.info(f"INICIANDO PIPELINE - {self.pipeline_name.upper()}")
         logger.info("=" * 60)
 
+        step = "extract"
+        df = None
+
         try:
-            # Extract
+            # 1. Extract
             df = self.extract(**kwargs)
+            step = "transform"
 
-            # Transform
+            # 2. Transform
             df = self.transform(df, **kwargs)
+            step = "load"
 
-            # Load
+            # 3. Load
             output_path = self.load(df, **kwargs)
 
             logger.info("=" * 60)
@@ -86,5 +97,35 @@ class BasePipeline(ABC):
             return output_path
 
         except Exception as e:
+            if recovery_agent:
+                logger.warning(f"🚨 Erro detectado no passo '{step}': {e}")
+                context = {
+                    "step": step,
+                    "data": df,
+                    "kwargs": kwargs,
+                    "pipeline_name": self.pipeline_name
+                }
+
+                recovery_result = recovery_agent.attempt_recovery(e, context)
+
+                if recovery_result and recovery_result.success:
+                    logger.info(f"✅ Recuperação bem-sucedida: {recovery_result.message}")
+
+                    if step == "extract":
+                        df = recovery_result.corrected_data
+                        step = "transform"
+                        df = self.transform(df, **kwargs)
+                        step = "load"
+                        return self.load(df, **kwargs)
+
+                    elif step == "transform":
+                        df = recovery_result.corrected_data
+                        step = "load"
+                        return self.load(df, **kwargs)
+
+                    elif step == "load":
+                        df = recovery_result.corrected_data
+                        return self.load(df, **kwargs)
+
             logger.error(f"Pipeline failed: {e}")
             raise

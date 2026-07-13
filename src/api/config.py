@@ -20,6 +20,9 @@ class APIConfig:
     # Segurança
     api_key: Optional[str] = None
 
+    # Observabilidade
+    enable_metrics: bool = True
+
     # Dados
     data_path: str = "./data"
 
@@ -36,6 +39,7 @@ class APIConfig:
             debug=os.getenv("API_DEBUG", "false").lower() == "true",
             api_key=os.getenv("API_KEY"),
             data_path=os.getenv("DATA_PATH", "./data"),
+            enable_metrics=os.getenv("API_ENABLE_METRICS", "true").lower() == "true",
         )
 
 

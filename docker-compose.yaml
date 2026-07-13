@@ -58,14 +58,13 @@ services:
       echo '==> Criando banco de dados...' &&
       airflow db migrate &&
       echo '==> Criando usuário admin...' &&
-      airflow users create \
-        --username ${AIRFLOW_USERNAME} \
-        --password ${AIRFLOW_PASSWORD} \
-        --firstname Admin \
-        --lastname User \
-        --email admin@lakehouse.com \
-        --role Admin \
-        || echo 'Usuário já existe ou erro na criação' &&
+      airflow users create
+      --username $${AIRFLOW_USERNAME:-admin}
+      --password $${AIRFLOW_PASSWORD:-admin}
+      --firstname Admin
+      --lastname User
+      --email admin@lakehouse.com
+      --role Admin || echo 'Usuário já existe ou erro na criação' &&
       echo '==> Inicialização concluída!'
       "
     environment:

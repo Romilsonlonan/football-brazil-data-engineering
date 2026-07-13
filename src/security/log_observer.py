@@ -28,12 +28,27 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
 from contextlib import contextmanager
+import time
+import traceback
+from typing import Optional, Dict, Any, Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from functools import wraps
+from contextlib import contextmanager
+from prometheus_client import Counter, Histogram
 
 from src.utils.logger import logger
+
+# Pipeline Prometheus Metrics
+PIPELINE_SUCCESS_TOTAL = Counter("pipeline_success_total", "Total successful pipeline executions", ["pipeline_name"])
+PIPELINE_FAILURE_TOTAL = Counter("pipeline_failure_total", "Total failed pipeline executions", ["pipeline_name"])
+PIPELINE_DURATION_SECONDS = Histogram("pipeline_duration_seconds", "Duration of pipeline executions", ["pipeline_name"])
+PIPELINE_ROWS_PROCESSED_TOTAL = Counter("pipeline_rows_processed_total", "Total rows processed by pipelines", ["pipeline_name"])
 
 
 @dataclass
 class PipelineMetrics:
+
     """Métricas de execução de um pipeline."""
 
     name: str
@@ -130,6 +145,11 @@ class PipelineMonitor:
             metrics.duration_seconds = time.time() - start_time
             metrics.status = "success"
 
+            # Prometheus
+            PIPELINE_SUCCESS_TOTAL.labels(pipeline_name=pipeline_name).inc()
+            PIPELINE_DURATION_SECONDS.labels(pipeline_name=pipeline_name).observe(metrics.duration_seconds)
+            PIPELINE_ROWS_PROCESSED_TOTAL.labels(pipeline_name=pipeline_name).inc(metrics.rows_processed)
+
             logger.info("=" * 60)
             logger.info(f"✅ PIPELINE CONCLUÍDO: {pipeline_name}")
             logger.info(f"   Duração: {metrics.duration_seconds:.2f}s")
@@ -143,6 +163,10 @@ class PipelineMonitor:
             metrics.status = "failed"
             metrics.error_message = str(e)
             metrics.error_traceback = traceback.format_exc()
+
+            # Prometheus
+            PIPELINE_FAILURE_TOTAL.labels(pipeline_name=pipeline_name).inc()
+            PIPELINE_DURATION_SECONDS.labels(pipeline_name=pipeline_name).observe(metrics.duration_seconds)
 
             logger.error("=" * 60)
             logger.error(f"❌ PIPELINE FALHOU: {pipeline_name}")

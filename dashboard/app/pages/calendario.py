@@ -76,7 +76,7 @@ TIME_LINK_MAP = {
 }
 
 
-def render(time: str, month: int) -> html.Div:
+def render(time: str, month: int, year: int = 2026) -> html.Div:
     """Renderiza a página de calendário."""
     time_id = TIME_ID_MAP.get(time)
     time_link = TIME_LINK_MAP.get(time)
@@ -85,7 +85,7 @@ def render(time: str, month: int) -> html.Div:
     error_msg = None
 
     if time_id and time_link:
-        games, error_msg = _fetch_games(time_id, time_link, month)
+        games, error_msg = _fetch_games(time_id, time_link, month, year)
 
     return html.Div(
         children=[
@@ -93,14 +93,14 @@ def render(time: str, month: int) -> html.Div:
                 className="page-header",
                 children=[
                     html.H1("📅 Calendário"),
-                    html.P(f"Jogos do {time} - {MONTH_NAMES.get(month, '')}"),
+                    html.P(f"Jogos do {time} - {MONTH_NAMES.get(month, '')} {year}"),
                 ],
             ),
             html.Div(
                 className="table-card",
                 children=[
                     html.Div(
-                        f"📅 Jogos de {MONTH_NAMES.get(month, '')}",
+                        f"📅 Jogos de {MONTH_NAMES.get(month, '')} {year}",
                         className="chart-title",
                     ),
                     _create_games_table(games, time, month),
@@ -124,11 +124,11 @@ def render(time: str, month: int) -> html.Div:
     )
 
 
-def render_sidebar(time: str, month: int) -> html.Div:
+def render_sidebar(time: str, month: int, year: int = 2026) -> html.Div:
     """Renderiza o calendário compactado para o sidebar."""
     from dashboard.app.services import DashboardService
 
-    games_df = DashboardService.get_calendario(time, month, 2026)
+    games_df = DashboardService.get_calendario(time, month, year)
 
     if not games_df.empty:
         games = games_df.to_dict("records")
@@ -137,7 +137,7 @@ def render_sidebar(time: str, month: int) -> html.Div:
         time_link = TIME_LINK_MAP.get(time)
         games = []
         if time_id and time_link:
-            games_list, _ = _fetch_games(time_id, time_link, month)
+            games_list, _ = _fetch_games(time_id, time_link, month, year)
             games = games_list
 
     month_name = MONTH_NAMES.get(month, "")
@@ -154,21 +154,21 @@ def render_sidebar(time: str, month: int) -> html.Div:
                 children=[
                     html.Span("⚽", className="calendar-icon"),
                     html.Span(
-                        f"{'Todos os Times' if time == 'all' else time} - {month_name}"
+                        f"{'Todos os Times' if time == 'all' else time} - {month_name} {year}"
                     ),
                 ],
             ),
             html.Div(
                 className="calendar-title",
                 children=[
-                    html.Span(f"📅 Jogos de {month_name}"),
+                    html.Span(f"📅 Jogos de {month_name} {year}"),
                 ],
             ),
             _create_games_table(games, time, month),
             html.Div(
                 className="calendar-empty",
                 children=[
-                    html.P(f"Nenhum jogo encontrado para {time} em {month_name}"),
+                    html.P(f"Nenhum jogo encontrado para {time} em {month_name} {year}"),
                     html.P("💡 Os jogos serão atualizados em breve"),
                 ],
             )
@@ -178,7 +178,7 @@ def render_sidebar(time: str, month: int) -> html.Div:
     )
 
 
-def _fetch_games(time_id: int, time_link: str, month: int):
+def _fetch_games(time_id: int, time_link: str, month: int, year: int):
     """Busca os jogos do time no mês especificado via ESPN."""
     url = f"https://www.espn.com.br/futebol/time/calendario/_/id/{time_id}/{time_link}"
 
@@ -250,11 +250,11 @@ def _create_games_table(games, time: str, month: int) -> html.Div:
             html.Tbody(
                 [
                     html.Tr(
-                        [
-                            html.Td(str(row.get("DATA", ""))),
-                            html.Td(str(row.get("JOGO", ""))),
-                            html.Td(str(row.get("HORA", ""))),
-                        ]
+                    [
+                        html.Td(str(row.get("data", ""))),
+                        html.Td(f"{row.get('casa', '')} vs {row.get('fora', '')}"),
+                        html.Td(str(row.get("hora", ""))),
+                    ]
                     )
                     for row in games
                 ]
